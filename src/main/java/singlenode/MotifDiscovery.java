@@ -1,4 +1,4 @@
-package motif;
+package singlenode;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -6,28 +6,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Scanner;
 
+import motif.Example;
+import motif.LogMeta;
+import motif.Meta;
+import motif.Motif;
+
 public class MotifDiscovery {
-	public static final String[] path = {"C:\\Users\\jinglun\\Desktop\\example0","C:\\Users\\jinglun\\Desktop\\example1","C:\\Users\\jinglun\\Desktop\\example2","C:\\Users\\jinglun\\Desktop\\example3"};//每一个文件是一个example，每行是一个维度
 	public List<Motif> discover(float POD,float FAR,int word_length,int motif_length,int dimension,Example[] examples) throws FileNotFoundException{
 		if(examples==null||examples.length==0)return null;
 		Map<Integer,Boolean> example_label = new HashMap<Integer,Boolean>();
 		Map<Integer,Example> example_map = new HashMap<Integer,Example>();
 		for(Example e:examples){
-			example_label.put(e.example_id, e.label);
-			example_map.put(e.example_id, e);
+			example_label.put(e.getExampleID(), e.getLabel());
+			example_map.put(e.getExampleID(), e);
 		}
 		//构造trie树
-		TrieTree tree = createTrie(examples,dimension,word_length);
-		tree.rootFirstSearch(0);
-		System.out.println();
-		tree.rootLastSearch(0);
+		TrieTree tree = createTrie(examples,dimension,word_length);//检测trie树构造的对不对，输出先根序和中根序到控制台。tree.rootFirstSearch(0);System.out.println();tree.rootLastSearch(0);
 		//d-合法motif
 		List<Motif> motifList = tree.leafNodeToMotif(example_label);
-		for(Motif m:motifList)
-			System.out.println(m);
-		motifList = motifFilter(POD,FAR,motifList);
+		motifList = motifFilter(POD,FAR,motifList);//当前所有合法motif，长度均为word_length
 		//d-合法motif生成长motif
 		List<Motif> finalMotifs = new ArrayList<Motif>();
 		finalMotifs.addAll(motifList);
@@ -49,10 +49,7 @@ public class MotifDiscovery {
 			finalMotifs.addAll(motifList);
 		}
 		//跨维度生成长motif
-		//展示结果
-		System.out.println("************结果*************");
-		for(Motif m:finalMotifs)
-			System.out.println(m);
+		//略
 		return finalMotifs;
 	}
 	private boolean filter(float POD,float FAR,Motif m){
@@ -75,9 +72,9 @@ public class MotifDiscovery {
 	public static Example[] dataPreProcessing(String[] paths) throws FileNotFoundException{
 		Map<String,Meta> map = new HashMap<String,Meta>();
 		long sid = 0;
-		Example[] examples = new Example[path.length];
-		for(int i=0;i<path.length;i++){
-			Scanner sc = new Scanner(new FileInputStream(path[i]));
+		Example[] examples = new Example[paths.length];
+		for(int i=0;i<paths.length;i++){
+			Scanner sc = new Scanner(new FileInputStream(paths[i]));
 			List<Meta[]> dimensions = new ArrayList<Meta[]>();
 			boolean label = sc.nextLine().equals("true");
 			while(sc.hasNextLine()){//for each dimension
@@ -101,12 +98,12 @@ public class MotifDiscovery {
 	private TrieTree createTrie(Example[] examples,int dimension,int length){
 		TrieTree tree = new TrieTree();
 		for(int i=0;i<examples.length;i++){
-			 Meta[] seq = examples[i].dimensions.get(dimension);
+			 Meta[] seq = examples[i].getDimensions().get(dimension);
 			 for(int j=0;j<seq.length-length+1;j++){
 				 int current = 0;
 				 for(int l=0;l<length;l++)
 					 current = tree.addChild(current, seq[j+l]);
-				 tree.addIndexToNode(current, examples[i].example_id, j);
+				 tree.addIndexToNode(current, examples[i].getExampleID(), j);
 			 }
 		}
 		return tree;

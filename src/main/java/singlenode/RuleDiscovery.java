@@ -1,6 +1,8 @@
-package motif;
+package singlenode;
 
 import java.util.*;
+
+import motif.Meta;
 
 public abstract class RuleDiscovery {
 	/**
@@ -19,7 +21,7 @@ public abstract class RuleDiscovery {
 		int best_n = -1;
 		//枚举划分点
 		for(int sp=1;sp<R.length;sp++){//R[0,sp-1]->R[sp,R.length-1]
-			List<Integer> ac = findAntecedentCandidates(T,R,sp);
+			List<Integer> ac = findAntecedentCandidates(T,R,sp);//所有sp长子串索引，按照与R[0,sp-1]距离升序排列
 			//find_Best_Number_of_Rule_Instances
 			int total = 0;
 			int n = 0;
@@ -35,7 +37,7 @@ public abstract class RuleDiscovery {
 			total -= Huffman(R,sp,R.length-1,bit);
 			//在sp=sp时的totalBitSave和ac-n
 			//total是totalBitSave，n是用到的ac中的子序列数目
-			if(total>best_total){
+			if(total>best_total||best_sp<1){
 				best_sp = sp;
 				best_total = total;
 				best_n = n;

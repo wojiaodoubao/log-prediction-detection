@@ -11,6 +11,15 @@ public class Example {
 		this.label =label;
 		this.example_id = example_id;
 	}
+	public int getExampleID(){
+		return this.example_id;
+	}
+	public boolean getLabel(){
+		return this.label;
+	}
+	public List<Meta[]> getDimensions(){
+		return this.dimensions;
+	}
 	@Override
 	public String toString(){
 		String s = "";
