@@ -22,7 +22,6 @@ public class LogMeta extends Meta{
 	}
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		return "["+sid+"]";
 	}	
 }

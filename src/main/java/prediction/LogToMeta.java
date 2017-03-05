@@ -21,6 +21,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.Utils;
+
 /**
  * 基于DataPreprocessing的输出文件
  * 根据日志内容从小到大排序，并为每条日志分配一个ID(long)，输出<ID-日志>映射表(日志按照ID从0到xxx排列，一行一个)。
@@ -55,10 +57,7 @@ public class LogToMeta  extends Configured implements Tool{
 	    	args[0] = sc.nextLine();
 	    	args[1] = sc.nextLine();
 	    	File f = new File(args[1]);
-	    	if(f.exists()){
-	    		boolean label = f.delete();
-	    		System.out.println("文件删除:"+label);
-	    	}
+	    	Utils.deletePath(args[1]);
 	    }
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));   
@@ -76,7 +75,7 @@ public class LogToMeta  extends Configured implements Tool{
 			String s = value.toString();
 			int index = s.indexOf(DataPreprocessing.SPLIT);
 			if(index<0)return;
-			context.write(new IntWritable(s.length()-1-index), new Text(s.substring(0,index)));
+			context.write(new IntWritable(s.length()-1-index), new Text(s.substring(0,index)));			
 		} 		
 	}
 	private static class MyReducer extends Reducer<IntWritable,Text,Text,NullWritable>{

@@ -1,0 +1,204 @@
+package prediction;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.hadoop.io.Writable;
+
+public class SeqWritable implements Writable,Comparable<SeqWritable>{
+	public List<SeqMeta> seq;//序列
+	public Map<String,List<Index>> indexMap;//索引 <文件名，毫秒list>
+	public static class Index{
+		public long start;
+		public long end;
+		public Index(long start,long end){
+			this.start = start;
+			this.end = end;
+		}
+		@Override
+		public String toString(){
+			return "("+start+" "+end+")";
+		}
+	}
+	public SeqWritable(){
+		//实现Writable接口类必须有一个无参构造方法
+		//否则抛出java.lang.NoSuchMethodException: className.<init>()
+	}
+	public SeqWritable(List<SeqMeta> seq,Map<String,List<Index>> indexMap){
+		this.seq = seq;
+		this.indexMap = indexMap;
+	}
+	@Override
+	public String toString(){
+		StringBuffer s = new StringBuffer();
+		//construct seq
+		for(SeqMeta m:seq){
+			s.append(m+",");
+		}
+		if(s.length()>=1){
+			s.deleteCharAt(s.length()-1);
+		}
+		s.append("\n");
+		//construct index 
+		for(Entry<String, List<Index>> entry:indexMap.entrySet()){
+			s.append(entry.getKey()+",");
+			for(Index l:entry.getValue()){
+				s.append(l.start+","+l.end+",");
+			}
+			if(s.length()>=1)s.deleteCharAt(s.length()-1);
+			s.append("\t");
+		}
+		if(s.length()>=1)s.deleteCharAt(s.length()-1);
+		return s.toString();
+	}
+	public void write(DataOutput out) throws IOException {
+		String s = this.toString();
+		int size = s.getBytes().length;
+		out.writeInt(size);//先写长度
+		out.write(s.getBytes());//再写bytes
+	}
+	public void readFields(DataInput in) throws IOException {
+		int size = in.readInt();//先获取长度
+		byte[] bytes = new byte[size];
+		in.readFully(bytes);//再读bytes，长度为size
+		String[] split = new String(bytes).split("\n");
+		String sequence = split[0];
+		String index = split[1];
+		if(sequence==null||index==null)return;
+		//construct seq
+		seq = new ArrayList<SeqMeta>();
+		for(String s:sequence.split(",")){
+			seq.add(new SeqMeta(Long.parseLong(s)));
+		}
+		//construct index 
+		indexMap = new HashMap<String,List<Index>>();
+		for(String tmp : index.split("\t")){
+			List<Index> list = new ArrayList<Index>();
+			String logName = null;
+			String[] ttt = tmp.split(",");
+			for(int j=0;j<ttt.length-1;j++){
+				if(j==0)logName = ttt[j];
+				else{
+					long start = Long.parseLong(ttt[j]);
+					long end = Long.parseLong(ttt[j+1]);
+					list.add(new Index(start,end));
+					j++;
+				}
+			}
+			indexMap.put(logName, list);
+		}
+		return;
+	}
+	@Override
+	public SeqWritable clone(){
+		List<SeqMeta> list = new ArrayList<SeqMeta>();//序列
+		Map<String,List<Index>> map = new HashMap<String,List<Index>>();//索引 <文件名，毫秒list>
+		for(SeqMeta m:seq)
+			list.add(new SeqMeta(m.sid));
+		for(Entry<String,List<Index>> entry:indexMap.entrySet()){
+			List<Index> l = new ArrayList<Index>();
+			for(Index index:entry.getValue())
+				l.add(new Index(index.start,index.end));
+			map.put(entry.getKey(), l);//String不用深拷贝。String的设计使其和基本类型一样，而不是像引用类型。
+		}
+		return new SeqWritable(list,map);
+	}
+	public static void main(String args[]) throws IOException{
+		List<SeqMeta> seq = new ArrayList<SeqMeta>();//序列
+		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
+		seq.add(new SeqMeta(0));
+		seq.add(new SeqMeta(1));
+		seq.add(new SeqMeta(2));
+		List<Index> list = new ArrayList<Index>();
+		list.add(new Index((long) 10,(long)10));
+		list.add(new Index((long) 11,(long)11));
+		list.add(new Index((long) 12,(long)12));
+		indexMap.put("XX", list);
+		list = new ArrayList<Index>();
+		list.add(new Index((long) 110,(long)110));
+		list.add(new Index((long) 120,(long)120));
+		list.add(new Index((long) 130,(long)130));
+		indexMap.put("XXX", list);	
+		//测试，写两遍读两遍，确实对
+		SeqWritable w = new SeqWritable(seq, indexMap);
+		seq = new ArrayList<SeqMeta>();
+		seq.add(new SeqMeta(5));
+		SeqWritable w2 = new SeqWritable(seq,indexMap);
+		
+		SeqWritable r = new SeqWritable(null,null);
+		RandomAccessFile out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");		
+		w.write(out);
+		w2.write(out);
+		out.close();
+		out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");
+		r.readFields(out);
+		System.out.println(r.seq);
+		System.out.println(r.indexMap);
+		r.readFields(out);
+		System.out.println(r.seq);
+		System.out.println(r.indexMap);	
+		out.close();		
+	}
+	public static int reverse = -1;//reverse = 1;
+	public int compareTo(SeqWritable obj) {
+		if(this==obj)return 0;
+		else if(obj instanceof SeqWritable){
+			SeqWritable sw = (SeqWritable)obj;
+			if(sw.seq==null){
+				if(this.seq==null)return 0;
+				return 1*reverse;
+			}
+			else if(this.seq==null)return -1*reverse;
+			int i=0,j=0;
+			while(i<this.seq.size()&&j<sw.seq.size()){
+				if(this.seq.get(i).sid<sw.seq.get(j).sid)return -1*reverse;
+				else if(this.seq.get(i).sid>sw.seq.get(j).sid)return 1*reverse;
+				else{
+					i++;j++;
+				}
+			}
+			if(i<this.seq.size())return 1*reverse;
+			else if(j<sw.seq.size())return -1*reverse;
+		}
+		return -1*reverse;//obj不是SeqWritable类型，随便返回
+	}
+	@Override
+	public boolean equals(Object obj){
+		if(this==obj)return true;
+		else if(obj instanceof SeqWritable){
+			SeqWritable sw = (SeqWritable)obj;
+			if(sw.seq==null){
+				if(this.seq==null)return true;
+				else return false;
+			}
+			else if(this.seq==null)return false;
+			else if(this.seq.size()!=sw.seq.size())return false;
+			for(int i=0;i<this.seq.size();i++){
+				if(!this.seq.get(i).equals(sw.seq.get(i)))return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	@Override
+	public int hashCode(){
+		int hash = 0;
+		if(seq!=null){
+			for(SeqMeta m:seq){
+				hash+=m.hashCode();
+			}
+		}
+		return hash;
+	}
+}

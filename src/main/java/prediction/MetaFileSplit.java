@@ -29,6 +29,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.Utils;
+
 public class MetaFileSplit extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
 		ToolRunner.run(new MetaFileSplit(), args);//ToolRunner.run()方法中为Configuration赋了初值。	
@@ -43,11 +45,7 @@ public class MetaFileSplit extends Configured implements Tool{
 	    	args[0] = sc.nextLine();
 	    	args[1] = sc.nextLine();
 	    	args[2] = sc.nextLine();//缓存字典
-	    	File f = new File(args[1]);
-	    	if(f.exists()){
-	    		boolean label = f.delete();
-	    		System.out.println("文件删除:"+label);
-	    	}
+	    	Utils.deletePath(args[1]);
 	    }		
 	    URI dictPath = new URI(args[2]+"#"+SYMBOL_LINK);
 	    

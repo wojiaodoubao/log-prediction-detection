@@ -34,6 +34,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.Utils;
+
 /**
  * InputFormat产生的<K,V>格式：
  * 	 AsciiLogInputFormat:<logFileName,RawContent>；LogInputFormat:<文件中索引，logFileName+'\n'+RawContent>
@@ -75,11 +77,7 @@ public class DataPreprocessing extends Configured implements Tool{
 	    	args = new String[2];
 	    	args[0] = sc.nextLine();
 	    	args[1] = sc.nextLine();
-	    	File f = new File(args[1]);
-	    	if(f.exists()){
-	    		boolean label = f.delete();
-	    		System.out.println("文件删除:"+label);
-	    	}
+	    	Utils.deletePath(args[1]);
 	    }
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));   
