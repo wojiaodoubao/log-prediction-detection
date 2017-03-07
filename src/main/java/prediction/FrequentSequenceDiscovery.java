@@ -187,7 +187,8 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 				seqSet.add(sw.clone());
 			seqSet = FrequentSequenceGenerator.getFrequentSequence(seqSet, gap, frequency);
 			for(SeqWritable sw:seqSet){
-				context.write(new Text(sw.toString()+"\n"), NullWritable.get());
+				String[] split = sw.toString().split("\n");
+				context.write(new Text(split[0]+":"+split[1]), NullWritable.get());
 			}
         }		
 	}

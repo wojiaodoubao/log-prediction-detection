@@ -43,23 +43,29 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 	public String toString(){
 		StringBuffer s = new StringBuffer();
 		//construct seq
-		for(SeqMeta m:seq){
-			s.append(m+",");
-		}
-		if(s.length()>=1){
-			s.deleteCharAt(s.length()-1);
+		if(seq!=null){
+			for(SeqMeta m:seq){
+				s.append(m+",");
+			}
+			if(s.length()>=1){
+				s.deleteCharAt(s.length()-1);
+			}
 		}
 		s.append("\n");
-		//construct index 
-		for(Entry<String, List<Index>> entry:indexMap.entrySet()){
-			s.append(entry.getKey()+",");
-			for(Index l:entry.getValue()){
-				s.append(l.start+","+l.end+",");
+		//construct index
+		if(indexMap!=null){
+			for(Entry<String, List<Index>> entry:indexMap.entrySet()){
+				s.append(entry.getKey()+",");
+				if(entry.getValue()!=null){
+					for(Index l:entry.getValue()){
+						s.append(l.start+","+l.end+",");
+					}
+				}
+				if(s.charAt(s.length()-1)==',')s.deleteCharAt(s.length()-1);
+				s.append("\t");
 			}
-			if(s.length()>=1)s.deleteCharAt(s.length()-1);
-			s.append("\t");
 		}
-		if(s.length()>=1)s.deleteCharAt(s.length()-1);
+		if(s.charAt(s.length()-1)=='\t')s.deleteCharAt(s.length()-1);
 		return s.toString();
 	}
 	public void write(DataOutput out) throws IOException {
@@ -73,30 +79,37 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		byte[] bytes = new byte[size];
 		in.readFully(bytes);//再读bytes，长度为size
 		String[] split = new String(bytes).split("\n");
-		String sequence = split[0];
-		String index = split[1];
-		if(sequence==null||index==null)return;
+		String sequence = null;
+		if(split.length>0)
+			sequence = split[0];
+		String index = null;
+		if(split.length>1)
+			index = split[1];
 		//construct seq
 		seq = new ArrayList<SeqMeta>();
-		for(String s:sequence.split(",")){
-			seq.add(new SeqMeta(Long.parseLong(s)));
+		if(sequence!=null&&!sequence.equals("")){
+			for(String s:sequence.split(",")){
+				seq.add(new SeqMeta(Long.parseLong(s)));
+			}
 		}
 		//construct index 
 		indexMap = new HashMap<String,List<Index>>();
-		for(String tmp : index.split("\t")){
-			List<Index> list = new ArrayList<Index>();
-			String logName = null;
-			String[] ttt = tmp.split(",");
-			for(int j=0;j<ttt.length-1;j++){
-				if(j==0)logName = ttt[j];
-				else{
-					long start = Long.parseLong(ttt[j]);
-					long end = Long.parseLong(ttt[j+1]);
-					list.add(new Index(start,end));
-					j++;
+		if(index!=null){
+			for(String tmp : index.split("\t")){
+				List<Index> list = new ArrayList<Index>();
+				String logName = null;
+				String[] ttt = tmp.split(",");
+				for(int j=0;j<ttt.length-1;j++){
+					if(j==0)logName = ttt[j];
+					else{
+						long start = Long.parseLong(ttt[j]);
+						long end = Long.parseLong(ttt[j+1]);
+						list.add(new Index(start,end));
+						j++;
+					}
 				}
+				indexMap.put(logName, list);
 			}
-			indexMap.put(logName, list);
 		}
 		return;
 	}
@@ -132,9 +145,14 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		indexMap.put("XXX", list);	
 		//测试，写两遍读两遍，确实对
 		SeqWritable w = new SeqWritable(seq, indexMap);
+//		SeqWritable w = new SeqWritable(seq, null);
 		seq = new ArrayList<SeqMeta>();
 		seq.add(new SeqMeta(5));
+		//seq==null，indexMap==null，4种组合，均可完成wirte&readFields
 		SeqWritable w2 = new SeqWritable(seq,indexMap);
+//		SeqWritable w2 = new SeqWritable(null, null);
+//		SeqWritable w2 = new SeqWritable(null, indexMap);
+//		SeqWritable w2 = new SeqWritable(seq, null);
 		
 		SeqWritable r = new SeqWritable(null,null);
 		RandomAccessFile out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");		

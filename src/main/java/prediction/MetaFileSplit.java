@@ -53,6 +53,7 @@ public class MetaFileSplit extends Configured implements Tool{
 		//构造分布式缓存，符号链接默认就是开启(1.0版本的时候需要手动开启，Job.createSymlink())
 		job.addCacheFile(dictPath);
 	    job.setJarByClass(LogToMeta.class);
+//	    job.setInputFormatClass(FullFileTextInputFormat.class);
 	    job.setInputFormatClass(TextInputFormat.class);
 
 	    job.setOutputKeyClass(Text.class);
