@@ -128,7 +128,7 @@ public class FrequentSequenceGenerator {
 	 * 
 	 * 算法可以参照测试中的测试例子来看。
 	 * 输入：
-	 * seqlist:频繁1维序列，没有重复项
+	 * seqSet:频繁1维序列，没有重复项
 	 * gap:gap
 	 * frequency:frequency
 	 * 输出：

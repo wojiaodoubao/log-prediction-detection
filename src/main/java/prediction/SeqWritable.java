@@ -8,13 +8,18 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
+
+import prediction.SeqWritable.Index;
 
 public class SeqWritable implements Writable,Comparable<SeqWritable>{
 	public List<SeqMeta> seq;//序列
@@ -126,6 +131,43 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 			map.put(entry.getKey(), l);//String不用深拷贝。String的设计使其和基本类型一样，而不是像引用类型。
 		}
 		return new SeqWritable(list,map);
+	}
+	private static final String DATE_STRING = "yyyy-MM-dd hh:mm:ss";
+	private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_STRING);
+	/**
+	 * 根据字符反序列化SeqWritable对象。字符串采用MetaFileSplit的输出格式。<br/>
+	 * 字符串格式：
+	 * sid+'\t'+logName1+'\t'+time1,time2,time3,...,timen+'\t'+logName2+'\t'+time1,time2...
+	 * 例：
+	 * 3	log1	2016-06-16 10:45:53,2016-06-16 10:45:57	log2	2016-06-16 10:45:55	log3	2016-06-16 10:45:55
+	 * 4	log1	2016-06-16 10:45:52,2016-06-16 10:45:56,2016-06-16 10:45:58	log2	2016-06-16 10:45:54	log3	2016-06-16 10:45:56 
+	 * */
+	public static SeqWritable deserializeSeqWritableFromString(String text){
+		String[] s = text.split("\t");
+		if(s==null||s.length<=0)return null;
+		//Construct meta list
+		int sid = Integer.parseInt(s[0]);
+		List<SeqMeta> list = new ArrayList<SeqMeta>();
+		list.add(new SeqMeta(sid));
+		//construct indexMap
+		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
+		for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
+			List<Index> timelist = new ArrayList<Index>();
+			for(String time:s[i+1].split(",")){
+				Date date = null;
+				try {
+					date = simpleDateFormat.parse(time);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				if(date!=null){
+					timelist.add(new Index(date.getTime(),date.getTime()));
+				}
+			}
+			indexMap.put(s[i], timelist);
+		}
+		SeqWritable sw = new SeqWritable(list,indexMap);
+		return sw;
 	}
 	public static void main(String args[]) throws IOException{
 		List<SeqMeta> seq = new ArrayList<SeqMeta>();//序列

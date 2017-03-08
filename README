@@ -65,3 +65,14 @@ RuleScoreToRules
 /home/belan/Desktop/Rules
 --------------------------------------------------
 
+
+MotifSequenceDiscovery
+--------------------------------------------------
+/home/belan/Desktop/MetaFileSplit/part-r-00000
+/home/belan/Desktop/Motif
+/home/belan/Desktop/Dict/part-r-00000
+60000
+0.5
+1
+log1,+	log2,+	log3,-
+--------------------------------------------------
