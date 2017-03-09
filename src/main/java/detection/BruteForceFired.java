@@ -131,7 +131,7 @@ public abstract class BruteForceFired {
 		}
 	}
 	//字符串"POD,FAR,CSI"->double[] POD,FAR,CSI
-	private static double[] deserializeScore(String s){
+	public static double[] deserializeScore(String s){
 		if(s==null)return null;
 		String[] split = s.split(",");
 		if(split==null||split.length<3)return null;
@@ -142,7 +142,7 @@ public abstract class BruteForceFired {
 		return res;
 	}
 	//字符串"sid1,sid2,sid3,..."->SeqMeta[]
-	private static SeqMeta[] deserializeSeqMeta(String s){
+	public static SeqMeta[] deserializeSeqMeta(String s){
 		if(s==null)return null;
 		String[] split = s.split(",");
 		SeqMeta[] mArray = new SeqMeta[split.length];
@@ -150,4 +150,13 @@ public abstract class BruteForceFired {
 			mArray[i] = SeqMeta.getSeqMetaBySID(Long.parseLong(split[i]));
 		return mArray;
 	}
+	//字符串"sid1,sid2,sid3,..."->List<SeqMeta>
+	public static List<SeqMeta> deserializeSeqMetaToArray(String s){
+		if(s==null)return null;
+		String[] split = s.split(",");
+		List<SeqMeta> mList = new ArrayList<SeqMeta>();
+		for(int i=0;i<split.length;i++)
+			mList.add(SeqMeta.getSeqMetaBySID(Long.parseLong(split[i])));
+		return mList;
+	}	
 }

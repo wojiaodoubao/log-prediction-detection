@@ -121,7 +121,7 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 	        return 1;
 	    }	    
 	}
-	private static final String DATE_STRING = "yyyy-MM-dd hh:mm:ss";
+	public static final String DATE_STRING = "yyyy-MM-dd hh:mm:ss";
 	private static class DeliverSeqMapper extends Mapper<LongWritable,Text,IntWritable,SeqWritable>{
 		private int metaNum = 0;
 		private int frequency = 0;
