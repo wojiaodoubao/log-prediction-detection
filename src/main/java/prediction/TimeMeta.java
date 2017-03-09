@@ -1,25 +1,19 @@
 package prediction;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import motif.Meta;
 
-public class TimeMeta extends Meta{
-	protected long sid;
+public class TimeMeta extends SIDMeta{
 	protected long time;
 	public TimeMeta(long sid,long time){
-		this.sid = sid;
+		super(sid);
 		this.time = time;
 	}
-	@Override
-	/**
-	 * sid相等就相等。
-	 * */
-	public boolean equals(Meta m) {
-		if(this==m)return true;
-		if(m instanceof TimeMeta){
-			TimeMeta sm = (TimeMeta)m;
-			if(this.sid==sm.sid)return true;
-		}
-		return false;
+	public TimeMeta(SIDMeta m,long time){
+		super(m.sid);
+		this.time = time;
 	}
 	@Override
 	public int hashCode(){
@@ -29,5 +23,7 @@ public class TimeMeta extends Meta{
 	public String toString() {
 		return sid+":"+time;
 	}
-
+	public long getTime(){
+		return this.time;
+	}	
 }

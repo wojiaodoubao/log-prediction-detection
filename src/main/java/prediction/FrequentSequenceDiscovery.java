@@ -136,9 +136,9 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 			String[] s = value.toString().split("\t");
 			if(s==null||s.length<=0)return;
 			//Construct meta list
-			int sid = Integer.parseInt(s[0]);
+			Long sid = Long.parseLong(s[0]);
 			List<SeqMeta> list = new ArrayList<SeqMeta>();
-			list.add(new SeqMeta(sid));
+			list.add(SeqMeta.getSeqMetaBySID(sid));
 			//construct indexMap
 			Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
 			for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
@@ -159,9 +159,9 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 			SeqWritable sw = new SeqWritable(list,indexMap);
 			//直接把不频繁的删掉，减少传输量
 			if(FrequentSequenceGenerator.frequency(sw)>=frequency){
-				for(int i =sid;i<metaNum;i++){//核心代码，管理序列发射到对应reducer
+				for(long i =sid;i<metaNum;i++){//核心代码，管理序列发射到对应reducer
 //					System.out.println(i+":"+sw);
-					context.write(new IntWritable(i), sw);
+					context.write(new IntWritable((int)i), sw);
 				}
 			}
 		} 		

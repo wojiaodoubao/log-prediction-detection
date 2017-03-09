@@ -12,7 +12,7 @@ public class LogMeta extends Meta{
 		this.sid = sid;
 	}
 	@Override
-	public boolean equals(Meta m) {
+	public boolean equals(Object m) {
 		if(this==m)return true;
 		if(m instanceof LogMeta){
 			LogMeta lm = (LogMeta)m;

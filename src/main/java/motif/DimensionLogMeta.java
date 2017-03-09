@@ -7,7 +7,7 @@ public class DimensionLogMeta extends LogMeta{
 		this.dimension = dimension;
 	}
 	@Override
-	public boolean equals(Meta m) {
+	public boolean equals(Object m) {
 		if(this==m)return true;
 		if(m instanceof DimensionLogMeta){
 			DimensionLogMeta dlm = (DimensionLogMeta)m;

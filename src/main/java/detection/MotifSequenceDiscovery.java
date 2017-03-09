@@ -208,10 +208,15 @@ public class MotifSequenceDiscovery extends Configured implements Tool{
 			Set<SeqWritable> seqSet = new HashSet<SeqWritable>();
 			for(SeqWritable sw:values)
 				seqSet.add(sw.clone());//很关键啊，values迭代返回的每次都是同一个引用，是同一个对象被反复使用。
-			seqSet = new MotifSequenceGenerator(seqSet,gap,POD,FAR,logLabel).getMotifSequence();
+			seqSet = new MotifSequenceGenerator(seqSet,gap,POD,FAR,logLabel).getMotifSequence();			
 			for(SeqWritable sw:seqSet){
-				String[] split = sw.toString().split("\n");
-				context.write(new Text(split[0]+":"+split[1]), NullWritable.get());
+				double[] score = MotifSequenceGenerator.compute_POD_FAR_CSI(sw, logLabel, T, F);
+				String out = sw.toString().split("\n")[0];
+				out+=":";
+				if(score!=null&&score.length>=3){
+					out+=score[0]+","+score[1]+","+score[2];
+				}
+				context.write(new Text(out), NullWritable.get());
 			}
         }		
 	}

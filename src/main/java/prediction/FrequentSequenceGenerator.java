@@ -44,7 +44,7 @@ public class FrequentSequenceGenerator {
 		
 		seq = new ArrayList<SeqMeta>();
 		indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(5));//a
+		seq.add(SeqMeta.getSeqMetaBySID((long)5));//a
 		List<Index> list = new ArrayList<Index>();
 		list.add(new Index(p1,p1));
 		list.add(new Index(p5,p5));
@@ -60,7 +60,7 @@ public class FrequentSequenceGenerator {
 
 		seq = new ArrayList<SeqMeta>();
 		indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(4));//b
+		seq.add(SeqMeta.getSeqMetaBySID((long)4));//b
 		list = new ArrayList<Index>();
 		list.add(new Index(p2,p2));
 		list.add(new Index(p6,p6));
@@ -75,7 +75,7 @@ public class FrequentSequenceGenerator {
 
 		seq = new ArrayList<SeqMeta>();
 		indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(3));//c
+		seq.add(SeqMeta.getSeqMetaBySID((long)3));//c
 		list = new ArrayList<Index>();
 		list.add(new Index(p3,p3));
 		indexMap.put("F1", list);
@@ -86,7 +86,7 @@ public class FrequentSequenceGenerator {
 
 		seq = new ArrayList<SeqMeta>();
 		indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(2));//d
+		seq.add(SeqMeta.getSeqMetaBySID((long)2));//d
 		list = new ArrayList<Index>();
 		list.add(new Index(p1,p1));
 		indexMap.put("F2", list);
@@ -98,7 +98,7 @@ public class FrequentSequenceGenerator {
 
 		seq = new ArrayList<SeqMeta>();
 		indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(1));//e
+		seq.add(SeqMeta.getSeqMetaBySID((long)1));//e
 		list = new ArrayList<Index>();
 		list.add(new Index(p4,p4));
 		indexMap.put("F1", list);

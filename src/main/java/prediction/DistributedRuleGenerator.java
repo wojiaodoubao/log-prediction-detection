@@ -149,7 +149,7 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 			String[] s = value.toString().split(":");
 			List<SeqMeta> list = new ArrayList<SeqMeta>();
 			for(String t:s[0].split(",")){
-				list.add(new SeqMeta(Long.parseLong(t)));
+				list.add(SeqMeta.getSeqMetaBySID(Long.parseLong(t)));
 			}
 			SeqWritable sw = new SeqWritable(list,null);
 			for(int i=0;i<reducer_num;i++){

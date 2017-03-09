@@ -94,7 +94,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		seq = new ArrayList<SeqMeta>();
 		if(sequence!=null&&!sequence.equals("")){
 			for(String s:sequence.split(",")){
-				seq.add(new SeqMeta(Long.parseLong(s)));
+				seq.add(SeqMeta.getSeqMetaBySID(Long.parseLong(s)));
 			}
 		}
 		//construct index 
@@ -123,7 +123,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		List<SeqMeta> list = new ArrayList<SeqMeta>();//序列
 		Map<String,List<Index>> map = new HashMap<String,List<Index>>();//索引 <文件名，毫秒list>
 		for(SeqMeta m:seq)
-			list.add(new SeqMeta(m.sid));
+			list.add(SeqMeta.getSeqMetaBySID(m.sid));
 		for(Entry<String,List<Index>> entry:indexMap.entrySet()){
 			List<Index> l = new ArrayList<Index>();
 			for(Index index:entry.getValue())
@@ -146,9 +146,9 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		String[] s = text.split("\t");
 		if(s==null||s.length<=0)return null;
 		//Construct meta list
-		int sid = Integer.parseInt(s[0]);
+		long sid = Long.parseLong(s[0]);
 		List<SeqMeta> list = new ArrayList<SeqMeta>();
-		list.add(new SeqMeta(sid));
+		list.add(SeqMeta.getSeqMetaBySID(sid));
 		//construct indexMap
 		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
 		for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
@@ -172,9 +172,9 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 	public static void main(String args[]) throws IOException{
 		List<SeqMeta> seq = new ArrayList<SeqMeta>();//序列
 		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
-		seq.add(new SeqMeta(0));
-		seq.add(new SeqMeta(1));
-		seq.add(new SeqMeta(2));
+		seq.add(SeqMeta.getSeqMetaBySID((long)0));
+		seq.add(SeqMeta.getSeqMetaBySID((long)1));
+		seq.add(SeqMeta.getSeqMetaBySID((long)2));
 		List<Index> list = new ArrayList<Index>();
 		list.add(new Index((long) 10,(long)10));
 		list.add(new Index((long) 11,(long)11));
@@ -189,7 +189,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		SeqWritable w = new SeqWritable(seq, indexMap);
 //		SeqWritable w = new SeqWritable(seq, null);
 		seq = new ArrayList<SeqMeta>();
-		seq.add(new SeqMeta(5));
+		seq.add(SeqMeta.getSeqMetaBySID((long)5));
 		//seq==null，indexMap==null，4种组合，均可完成wirte&readFields
 		SeqWritable w2 = new SeqWritable(seq,indexMap);
 //		SeqWritable w2 = new SeqWritable(null, null);

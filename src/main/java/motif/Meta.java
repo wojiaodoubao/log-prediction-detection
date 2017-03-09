@@ -4,6 +4,7 @@ package motif;
  * Raw data经过预处理之后得到的序列数据应该是一个Meta[]数组
  * */
 public abstract class Meta {
-	public abstract boolean equals(Meta m);
+	@Override
+	public abstract boolean equals(Object m);
 	public abstract String toString();
 }
