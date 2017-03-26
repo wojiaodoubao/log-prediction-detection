@@ -144,13 +144,7 @@ public class FrequentSequenceGenerator {
 		Set<SeqWritable> result = new HashSet<SeqWritable>();//收集挖掘结果
 		result.add(one.get(0));//收集size==1的含a的频繁序列
 		int size = result.size();
-		while(true){			
-			//输出
-//			for(SeqWritable sw:seqSet){
-//				System.out.println(sw.seq);
-//				System.out.println(sw.indexMap);
-//			}	
-//			System.out.println("--------------------");		
+		while(true){
 			Set<SeqWritable> newSeqSet = enumerate(seqSet,one,gap,frequency);//挖掘下一层		
 			//result中去掉子序列。ps:在挖掘n+1层的过程中不能去掉第n层中的子序列，比如aaaaa->aaaaaa，如果去掉aaaaa，那根据剪枝规则，以后的aaaaab就无法生成了。
 			SeqWritable swTmp = new SeqWritable(null,null);
@@ -237,6 +231,8 @@ public class FrequentSequenceGenerator {
 		return result;
 	}
 	/** 
+	 * 归并合并sw1，sw2；极大提高合并效率！
+	 * 归并合并O(len(sw1)+len(sw2))>枚举合并O(len(sw1)*len(sw2))>Apriori扫描合并O(序列数据库条目数*在该条上做fired匹配)//序列数据库条目数==日志文件个数
 	 * 1.在sw1后追加合并sw2，并检验频数是否>=frequency，满足返回合并后的新sw，否则返回null。
 	 * 2.frequency可以是任意int值，可以是负值。
 	 * 3.是根据sw1与sw2的index进行merge，调用者应该在保证搜集了完整的sw1，sw2索引信息。
@@ -247,18 +243,22 @@ public class FrequentSequenceGenerator {
 			List<Index> first = entry.getValue();
 			List<Index> second = sw2.indexMap.get(entry.getKey());
 			if(first==null||second==null||first.size()<=0||second.size()<=0)continue;
-			for(Index fi:first){//O(n^2)，匹配sw1后接sw2的所有可能
-				for(Index si:second){
-					if(si.start-fi.end>0&&si.start-fi.end<=gap){
-						List<Index> list = rindex.get(entry.getKey());
-						if(list==null){
-							list = new ArrayList<Index>();
-							rindex.put(entry.getKey(), list);
-						}
-						list.add(new Index(fi.start,si.end));
-					}
+			//归并
+			int i = 0;
+			int j = 0;
+			List<Index> list = new ArrayList<Index>();
+			while(i<first.size()&&j<second.size()){
+				if(first.get(i).end>=second.get(j).start)
+					j++;
+				else if(second.get(j).start-first.get(i).end>gap)
+					i++;
+				else{
+					list.add(new Index(first.get(i).start,second.get(j).end));
+					j++;
 				}
 			}
+			if(list.size()>0)
+				rindex.put(entry.getKey(), list);
 		}
 		if(rindex.size()>=frequency){
 			List<SeqMeta> rlist = mergeSeq(sw1,sw2);

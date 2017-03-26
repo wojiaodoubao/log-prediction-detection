@@ -15,6 +15,12 @@ import prediction.TimeMeta;
  * */
 public abstract class BruteForceFired {
 	public static void main(String args[]) throws IOException{//测试
+		/**
+		 * mTree内容：
+			0,1,3:0,0.5,0
+			0,1,4:1,0.3,1
+			0,2:2,0.2,2 
+		 * */
 		List<MotifNode> mTree = createMotifTreeFromLog("/home/belan/Desktop/mTree");
 		//firstSearch(mTree,0);
 		List<TimeMeta> logSeq = new ArrayList<TimeMeta>();

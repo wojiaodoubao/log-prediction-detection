@@ -1,8 +1,9 @@
 带gap的时间序列频繁模式挖掘(完成)+基于MDL打分的规则产生算法(完成)+预测预警展示界面(未完成)
 
+DataPreprocessing+LogToMeta+MetaFileSplit可以算是预处理！
 
 1.执行命令：
-DataPreprocessing
+prediction.DataPreprocessing
 --------------------------------------------------
 /home/belan/Desktop/实验数据2
 /home/belan/Desktop/DataPreprocessing
@@ -76,3 +77,4 @@ MotifSequenceDiscovery
 1
 log1,+;log2,+;log3,-
 --------------------------------------------------
+
