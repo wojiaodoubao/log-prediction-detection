@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import detection.BruteForceFired;
+import utils.SeqMeta;
+import utils.TimeMeta;
 
 /**
  * 错误预警
@@ -71,7 +73,7 @@ public abstract class ErrorPrediction {
 		sidToLogDict.put((long)4, "4");
 		long ruleGap = 60000;
 		long gap = 10;
-		new EP1(rTree,logToSidDict,sidToLogDict,ruleGap,gap)
+		new ErrorPredictionImpl(rTree,logToSidDict,sidToLogDict,ruleGap,gap)
 			.errorPredictionByConsole(System.in);
 	}
 	private List<RuleNode> rTree = null;//RuleTree
@@ -91,7 +93,7 @@ public abstract class ErrorPrediction {
 	private Map<String,Long> logToSidDict;//日志-sid map
 	private Map<Long,String> sidToLogDict;//sid-日志 map
 	private SimpleDateFormat sdf =//格式化时间 
-			new SimpleDateFormat(FrequentSequenceDiscovery.DATE_STRING);
+			new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
 	/**
 	 * rTree:规则前缀构造的规则树<br />
 	 * ruleGap:规则产生时使用的ruleGap
@@ -131,7 +133,7 @@ public abstract class ErrorPrediction {
 		public String toString(){
 			String s = curNode+":";
 			if(lastMeta!=null)
-				s+=lastMeta.time;
+				s+=lastMeta.getTime();
 			return s;
 		}
 	}
@@ -169,8 +171,8 @@ public abstract class ErrorPrediction {
 					else{//对于其他状态
 						RuleNode staN = rTree.get(sta.curNode);//获取当前RuleNode
 						if(sta.lastMeta==null//此状态非法
-								||(curM.time-sta.lastMeta.time)<0
-								||(curM.time-sta.lastMeta.time)>gap//此状态超时
+								||(curM.getTime()-sta.lastMeta.getTime())<0
+								||(curM.getTime()-sta.lastMeta.getTime())>gap//此状态超时
 								||staN.sons==null){//此状态已走到头
 							deleteStatus.add(sta);
 							continue;

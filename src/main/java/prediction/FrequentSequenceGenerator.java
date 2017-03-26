@@ -3,7 +3,9 @@ package prediction;
 import java.util.*;
 import java.util.Map.Entry;
 
-import prediction.SeqWritable.Index;
+import utils.SeqMeta;
+import utils.SeqWritable;
+import utils.SeqWritable.Index;
 
 public class FrequentSequenceGenerator {
 	public static void main(String args[]){//测试
@@ -135,32 +137,24 @@ public class FrequentSequenceGenerator {
 	 * 产生所有含max_sid且序列由<=sid元素组成的gap，frequency频繁序列。
 	 * */
 	public static Set<SeqWritable> getFrequentSequence(
-			Set<SeqWritable> seqSet,long gap,int frequency){
-		SeqWritable.reverse = -1;//递减序
-		List<SeqWritable> one = new ArrayList<SeqWritable>();//size==1的频繁序列，每次递1的1都是从One中选的。
-		one.addAll(seqSet);
-		Collections.sort(one);
+			Set<SeqWritable> words,long gap,int frequency){
+		List<SeqWritable> one = new ArrayList<SeqWritable>();//size==1的频繁序列，每次递增1都是从One中选的。
+		one.addAll(words);
+		Collections.sort(one);	
 		
+		Set<SeqWritable> seqSet = new HashSet<SeqWritable>();//广搜：层序列集合
+		seqSet.add(one.get(0));//构造第一层
 		Set<SeqWritable> result = new HashSet<SeqWritable>();//收集挖掘结果
-		result.add(one.get(0));//收集size==1的含a的频繁序列
-		int size = result.size();
+		result.addAll(seqSet);//add size==1的含a的频繁序列
 		while(true){
-			Set<SeqWritable> newSeqSet = enumerate(seqSet,one,gap,frequency);//挖掘下一层		
-			//result中去掉子序列。ps:在挖掘n+1层的过程中不能去掉第n层中的子序列，比如aaaaa->aaaaaa，如果去掉aaaaa，那根据剪枝规则，以后的aaaaab就无法生成了。
-			SeqWritable swTmp = new SeqWritable(null,null);
-			for(SeqWritable sw:newSeqSet){
-				swTmp.seq = dropAMeta(sw.seq,0);//去掉第一个 
-				result.remove(swTmp);
-				swTmp.seq = dropAMeta(sw.seq,sw.seq.size()-1);//去掉最后一个
-				result.remove(swTmp);
-			}
-			//加入n+1层
-			result.addAll(newSeqSet);
-			//n=n+1
-			seqSet = newSeqSet;
-			//没有挖掘出新序列则退出
-			if(result.size()<=size)break;
-			else size = result.size();
+			List<Set<SeqWritable>> nextLevel = enumerate(seqSet,one,gap,frequency);//挖掘下一层 
+			Set<SeqWritable> newSeqSet = nextLevel.get(0);
+			Set<SeqWritable> removeSeqSet = nextLevel.get(1);			
+			result.removeAll(removeSeqSet);//移除重复子序列
+			result.addAll(newSeqSet);//加入n+1层			
+			if(newSeqSet.size()==0)//没有挖掘出新序列则退出
+				break;
+			seqSet = newSeqSet;//n=n+1
 		}		
 		return result;
 	}
@@ -170,48 +164,65 @@ public class FrequentSequenceGenerator {
 		return sw.indexMap.size();//在多少文件中出现过
 	}
 	//只能每次长1，因为只知道所有size==1的频繁模式的完整Index
-	private static Set<SeqWritable> enumerate(Set<SeqWritable> seqSet,
+	private static List<Set<SeqWritable>> enumerate(Set<SeqWritable> seqSet,
 			List<SeqWritable> one,long gap,int frequency){
-		Set<SeqWritable> newSeqSet = new HashSet<SeqWritable>();
-		if(one==null||seqSet==null||one.size()<=0||seqSet.size()<=0)return newSeqSet;
+		Set<SeqWritable> newSeqSet = new HashSet<SeqWritable>();//next level seq set
+		Set<SeqWritable> removeSeqSet = new HashSet<SeqWritable>();//remove seq set
+		
+		List<SeqMeta> linkedSeq = new LinkedList<SeqMeta>();
+		SeqWritable swTmp = new SeqWritable(linkedSeq,null);
 		for(SeqWritable sw:seqSet){
-			if(sw.seq.size()<=0)continue;
-			else if(sw.seq.size()==1){//特殊处理size==1层，[a,b,c,d,e]->[aa,ab,ac,ad,ae,ba,ca,da,ea]
-				SeqWritable tmp = merge(one.get(0),one.get(0),gap,frequency);
-				if(tmp!=null)newSeqSet.add(tmp);					
-				for(int i=1;i<one.size();i++){
-					tmp = merge(one.get(0),one.get(i),gap,frequency);
-					if(tmp!=null)newSeqSet.add(tmp);
-					tmp = merge(one.get(i),one.get(0),gap,frequency);
-					if(tmp!=null)newSeqSet.add(tmp);						
-				}
-			}
-			else{//size>1层，剪枝合并
-				SeqWritable swTmp = new SeqWritable(null,null);
-				for(SeqWritable c:one){
-					//剪枝，合并
-					swTmp.seq = mergeSeq(sw,c);//sw+c
-					if(!newSeqSet.contains(swTmp)){//已经在第n+1层？
-						swTmp.seq = dropAMeta(swTmp.seq,0);
-						if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){
-							//如果list是一个含a序列，则list需要在seqSet中出现
-							SeqWritable tmp = merge(sw,c,gap,frequency);
-							if(tmp!=null)newSeqSet.add(tmp);
+			linkedSeq.clear();
+			linkedSeq.addAll(sw.seq);
+			for(SeqWritable c:one){//剪枝，合并
+				//处理sw+c
+				swTmp.seq.add(c.seq.get(0));//sw+c
+				if(!newSeqSet.contains(swTmp)){//sw+c不在newSeqSet中
+					SeqMeta element = swTmp.seq.remove(0);//构造sw[1:n-1]+c，即移除sw+c的第一个元素
+					if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){//如果list是一个含a序列，则list需要在seqSet中出现						
+						SeqWritable newSeq = merge(sw,c,gap,frequency);
+						if(newSeq!=null){
+							newSeqSet.add(newSeq);
+							//添加到移除集合
+							if(!removeSeqSet.contains(swTmp)){
+								List<SeqMeta> removeSeq = new ArrayList<SeqMeta>();
+								removeSeq.addAll(swTmp.seq);
+								SeqWritable remove = new SeqWritable(removeSeq,null);
+								removeSeqSet.add(remove);
+							}
+							removeSeqSet.add(sw);							
 						}
 					}
-					swTmp.seq = mergeSeq(c,sw);//c+sw
-					if(!newSeqSet.contains(swTmp)){//已经在第n+1层？
-						swTmp.seq = dropAMeta(swTmp.seq,swTmp.seq.size()-1);
-						if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){
-							//如果list是一个含a序列，则list需要在seqSet中出现
-							SeqWritable tmp = merge(c,sw,gap,frequency);
-							if(tmp!=null)newSeqSet.add(tmp);
+					swTmp.seq.add(0, element);//还原为sw+c
+				}
+				swTmp.seq.remove(swTmp.seq.size()-1);//还原为sw
+				//处理c+sw
+				swTmp.seq.add(0, c.seq.get(0));;//c+sw			
+				if(!newSeqSet.contains(swTmp)){//已经在第n+1层？
+					SeqMeta element = swTmp.seq.remove(swTmp.seq.size()-1);//构造c+sw[0:n-2]，即移除c+sw的最后一个元素
+					if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){//如果list是一个含a序列，则list需要在seqSet中出现						
+						SeqWritable newSeq = merge(c,sw,gap,frequency);
+						if(newSeq!=null){
+							newSeqSet.add(newSeq);
+							//添加到移除集合
+							if(!removeSeqSet.contains(swTmp)){
+								List<SeqMeta> removeSeq = new ArrayList<SeqMeta>();
+								removeSeq.addAll(swTmp.seq);
+								SeqWritable remove = new SeqWritable(removeSeq,null);
+								removeSeqSet.add(remove);
+							}
+							removeSeqSet.add(sw);							
 						}
-					}					
+					}
+					swTmp.seq.add(element);//还原为c+sw
 				}				
-			}
+				swTmp.seq.remove(0);//还原为sw				
+			}				
 		}
-		return newSeqSet;
+		List<Set<SeqWritable>> result = new ArrayList<Set<SeqWritable>>();
+		result.add(newSeqSet);
+		result.add(removeSeqSet);
+		return result;
 	}
 	/**
 	 * 合并SeqWritable，产生SeqMeta序列
@@ -232,6 +243,7 @@ public class FrequentSequenceGenerator {
 	}
 	/** 
 	 * 归并合并sw1，sw2；极大提高合并效率！
+	 * 容易写错。。。
 	 * 归并合并O(len(sw1)+len(sw2))>枚举合并O(len(sw1)*len(sw2))>Apriori扫描合并O(序列数据库条目数*在该条上做fired匹配)//序列数据库条目数==日志文件个数
 	 * 1.在sw1后追加合并sw2，并检验频数是否>=frequency，满足返回合并后的新sw，否则返回null。
 	 * 2.frequency可以是任意int值，可以是负值。
@@ -253,7 +265,13 @@ public class FrequentSequenceGenerator {
 				else if(second.get(j).start-first.get(i).end>gap)
 					i++;
 				else{
-					list.add(new Index(first.get(i).start,second.get(j).end));
+					int k = i;
+					while(k<first.size()
+							&&second.get(j).start-first.get(k).end>0
+							&&second.get(j).start-first.get(k).end<=gap){
+						list.add(new Index(first.get(k).start,second.get(j).end));
+						k++;
+					}
 					j++;
 				}
 			}

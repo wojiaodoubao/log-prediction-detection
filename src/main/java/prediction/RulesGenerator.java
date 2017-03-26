@@ -5,8 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 import motif.Meta;
+import utils.TimeMeta;
 
-public class RuleDiscovery {
+public class RulesGenerator {
 	public static void main(String args[]){//测试
 		//abceaba|deabc|edeba
 		//5431545|21543|12145
@@ -36,7 +37,7 @@ public class RuleDiscovery {
 		freSeq[1] = new TimeMeta(4,1);
 		freSeq[2] = new TimeMeta(3,1);
 		freSeq[3] = new TimeMeta(1,1);
-		int[] res = new RuleDiscovery(logSeq,4,5,8,0.5).scoreAllRules(freSeq);
+		int[] res = new RulesGenerator(logSeq,4,5,8,0.5).scoreAllRules(freSeq);
 		for(int i:res)
 			System.out.println(i);
 	}
@@ -75,7 +76,7 @@ public class RuleDiscovery {
 			return "("+start+" "+end+" "+distance+")";
 		}
 	}
-	public RuleDiscovery(TimeMeta[] logSeq,int cardinality,long gap,long ruleGap,double firedThreshold){
+	public RulesGenerator(TimeMeta[] logSeq,int cardinality,long gap,long ruleGap,double firedThreshold){
 		this.logSeq = logSeq;
 		this.cardinality = cardinality;
 		this.gap = gap;
@@ -122,7 +123,7 @@ public class RuleDiscovery {
 				//logSeq[i].time-logSeq[firedSeq.get(n).end].time>ruleGap
 				//枚举X每个可能的startPoint。
 				for(int i=firedSeq.get(n).end+1;i<=logSeq.length-(freSeq.length-sp);i++){
-					if(logSeq[i].time-logSeq[firedSeq.get(n).end].time>ruleGap)break;
+					if(logSeq[i].getTime()-logSeq[firedSeq.get(n).end].getTime()>ruleGap)break;
 					int tmp = smallestDistance(i,freSeq,sp);
 					smallestDistance = tmp<smallestDistance?tmp:smallestDistance;
 				}
@@ -160,7 +161,7 @@ public class RuleDiscovery {
 		for(int i=0;i<list.size();i++){
 			Index in = list.get(i);
 			for(int j=in.end+1;j<logSeq.length;j++){
-				if((logSeq[j].time-logSeq[in.end].time)>gap)break;
+				if((logSeq[j].getTime()-logSeq[in.end].getTime())>gap)break;
 				if(logSeq[j].equals(m))
 					newList.add(new Index(in.start,j,in.distance));
 				else
@@ -214,7 +215,7 @@ public class RuleDiscovery {
 			return distance;
 		int small = freSeq.length-1-lastFreSeq;
 		for(int i=1;lastLogSeq+i<=logSeq.length-(freSeq.length-1-lastFreSeq);i++){//枚举每一个可能的下一logSeq元素
-			if(logSeq[lastLogSeq+i].time-logSeq[lastLogSeq].time>gap)break;
+			if(logSeq[lastLogSeq+i].getTime()-logSeq[lastLogSeq].getTime()>gap)break;
 			int tmp = 0;
 			if(logSeq[lastLogSeq+i].equals(freSeq[lastFreSeq+1])){
 				tmp = recursiveSmallestDistance(distance,lastLogSeq+i,freSeq,lastFreSeq+1);	

@@ -1,4 +1,4 @@
-package prediction;
+package utils;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -19,7 +19,7 @@ import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
 
-import prediction.SeqWritable.Index;
+import utils.SeqWritable.Index;
 
 public class SeqWritable implements Writable,Comparable<SeqWritable>{
 	public List<SeqMeta> seq;//序列
@@ -52,7 +52,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 			for(SeqMeta m:seq){
 				s.append(m+",");
 			}
-			if(s.length()>=1){
+			if(s.charAt(s.length()-1)==','){
 				s.deleteCharAt(s.length()-1);
 			}
 		}
@@ -123,7 +123,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		List<SeqMeta> list = new ArrayList<SeqMeta>();//序列
 		Map<String,List<Index>> map = new HashMap<String,List<Index>>();//索引 <文件名，毫秒list>
 		for(SeqMeta m:seq)
-			list.add(SeqMeta.getSeqMetaBySID(m.sid));
+			list.add(SeqMeta.getSeqMetaBySID(m.getSID()));
 		for(Entry<String,List<Index>> entry:indexMap.entrySet()){
 			List<Index> l = new ArrayList<Index>();
 			for(Index index:entry.getValue())
@@ -210,7 +210,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		System.out.println(r.indexMap);	
 		out.close();		
 	}
-	public static int reverse = -1;//reverse = 1;
+	private static final int reverse = -1;//reverse = 1;
 	public int compareTo(SeqWritable obj) {
 		if(this==obj)return 0;
 		else if(obj instanceof SeqWritable){
@@ -222,14 +222,15 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 			else if(this.seq==null)return -1*reverse;
 			int i=0,j=0;
 			while(i<this.seq.size()&&j<sw.seq.size()){
-				if(this.seq.get(i).sid<sw.seq.get(j).sid)return -1*reverse;
-				else if(this.seq.get(i).sid>sw.seq.get(j).sid)return 1*reverse;
+				if(this.seq.get(i).getSID()<sw.seq.get(j).getSID())return -1*reverse;
+				else if(this.seq.get(i).getSID()>sw.seq.get(j).getSID())return 1*reverse;
 				else{
 					i++;j++;
 				}
 			}
 			if(i<this.seq.size())return 1*reverse;
 			else if(j<sw.seq.size())return -1*reverse;
+			return 0;//这里修改！
 		}
 		return -1*reverse;//obj不是SeqWritable类型，随便返回
 	}
@@ -238,16 +239,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		if(this==obj)return true;
 		else if(obj instanceof SeqWritable){
 			SeqWritable sw = (SeqWritable)obj;
-			if(sw.seq==null){
-				if(this.seq==null)return true;
-				else return false;
-			}
-			else if(this.seq==null)return false;
-			else if(this.seq.size()!=sw.seq.size())return false;
-			for(int i=0;i<this.seq.size();i++){
-				if(!this.seq.get(i).equals(sw.seq.get(i)))return false;
-			}
-			return true;
+			return this.seq.equals(sw.seq);
 		}
 		return false;
 	}

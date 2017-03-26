@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import prediction.SIDMeta;
-import prediction.SeqMeta;
-import prediction.TimeMeta;
+import utils.SIDMeta;
+import utils.SeqMeta;
+import utils.TimeMeta;
 /**
  * 暴力搜索法
  * 根据输入日志序列在motif集合上fired情况，计算概率。

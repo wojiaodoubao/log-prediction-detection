@@ -31,14 +31,14 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import prediction.FrequentSequenceDiscovery;
+import prediction.FrequentSequenceDiscoveryMR;
 import prediction.FrequentSequenceGenerator;
-import prediction.FrequentSequenceDiscovery.OneKeyOneReducerPartitioner;
-import prediction.SeqWritable.Index;
-import prediction.LogToMeta;
-import prediction.SeqMeta;
-import prediction.SeqWritable;
+import prediction.FrequentSequenceDiscoveryMR.OneKeyOneReducerPartitioner;
+import preprocessing.LogToMeta;
+import utils.SeqMeta;
+import utils.SeqWritable;
 import utils.Utils;
+import utils.SeqWritable.Index;
 
 /**
  * Motif序列挖掘

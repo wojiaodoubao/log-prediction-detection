@@ -1,4 +1,4 @@
-package prediction;
+package preprocessing;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -34,6 +34,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.LogInputFormat;
+import utils.LogWritable;
 import utils.Utils;
 
 /**
@@ -81,7 +83,7 @@ public class DataPreprocessing extends Configured implements Tool{
 	    }
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));   
-	    System.out.println("提交任务");
+	    System.out.println("提交任务DataPreprocessing");
 	    boolean status = job.waitForCompletion(true);
 	    if (status) {
 	        return 0;

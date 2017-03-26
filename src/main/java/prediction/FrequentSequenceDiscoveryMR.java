@@ -37,8 +37,11 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import prediction.SeqWritable.Index;
+import utils.NoIndexSeqWritable;
+import utils.SeqMeta;
+import utils.SeqWritable;
 import utils.Utils;
+import utils.SeqWritable.Index;
 /**
  * 频繁模式序列挖掘
  * 
@@ -60,9 +63,9 @@ import utils.Utils;
  * 2.文件输入：
  * 	MetaFileSplit的输出结果。每行是一条日志及其索引，日志内容已经用Meta替换过。
  * */
-public class FrequentSequenceDiscovery extends Configured implements Tool{
+public class FrequentSequenceDiscoveryMR extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
-		ToolRunner.run(new FrequentSequenceDiscovery(), args);//ToolRunner.run()方法中为Configuration赋了初值。
+		ToolRunner.run(new FrequentSequenceDiscoveryMR(), args);//ToolRunner.run()方法中为Configuration赋了初值。
 	}
 	private static final String META_NUM = "meta.num";
 	private static final String GAP = "gap";
@@ -96,13 +99,13 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 	    getConf().set(META_NUM, metaNum+"");
 
 		Job job = Job.getInstance(getConf());
-	    job.setJarByClass(FrequentSequenceDiscovery.class);
+	    job.setJarByClass(FrequentSequenceDiscoveryMR.class);
 	    job.setInputFormatClass(TextInputFormat.class);
 	    job.setOutputFormatClass(TextOutputFormat.class);
 	    	    
 	    job.setMapOutputKeyClass(IntWritable.class);
 	    job.setMapOutputValueClass(SeqWritable.class);
-	    job.setOutputKeyClass(Text.class);
+	    job.setOutputKeyClass(NoIndexSeqWritable.class);
 	    job.setOutputValueClass(NullWritable.class);
 
 	    job.setMapperClass(DeliverSeqMapper.class);
@@ -113,7 +116,7 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 	    
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));   
-	    System.out.println("提交FrequentSequenceDiscovery任务");
+	    System.out.println("提交FrequentSequenceDiscoveryMR任务");
 	    boolean status = job.waitForCompletion(true);
 	    if (status) {
 	        return 0;
@@ -121,7 +124,6 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 	        return 1;
 	    }	    
 	}
-	public static final String DATE_STRING = "yyyy-MM-dd hh:mm:ss";
 	private static class DeliverSeqMapper extends Mapper<LongWritable,Text,IntWritable,SeqWritable>{
 		private int metaNum = 0;
 		private int frequency = 0;
@@ -132,7 +134,7 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 		}
 		@Override
         public void map(LongWritable key,Text value, Context context) throws IOException, InterruptedException {
-			SimpleDateFormat sdf = new SimpleDateFormat(DATE_STRING);
+			SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
 			String[] s = value.toString().split("\t");
 			if(s==null||s.length<=0)return;
 			//Construct meta list
@@ -171,7 +173,7 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
 	 * 2.第i个Reducer接收所有sid<=i的序列(SeqWritable)
 	 * 3.根据收到序列进行频繁序列挖掘
 	 * */
-	private static class FrequentSequenceGenerateReducer extends Reducer<IntWritable,SeqWritable,Text,NullWritable>{
+	private static class FrequentSequenceGenerateReducer extends Reducer<IntWritable,SeqWritable,NoIndexSeqWritable,NullWritable>{
 		private int gap = 0;
 		private int frequency = 0;
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -181,14 +183,14 @@ public class FrequentSequenceDiscovery extends Configured implements Tool{
         //计算：所有元素都<=key，且序列本身含key的频繁序列
 		@Override
 		public void reduce(IntWritable key, Iterable<SeqWritable> values, Context context) throws IOException, InterruptedException{
-			//这里这里！！！！！！！！！！！！！！！
 			Set<SeqWritable> seqSet = new HashSet<SeqWritable>();
 			for(SeqWritable sw:values)
 				seqSet.add(sw.clone());
 			seqSet = FrequentSequenceGenerator.getFrequentSequence(seqSet, gap, frequency);
+			NoIndexSeqWritable out = new NoIndexSeqWritable();
 			for(SeqWritable sw:seqSet){
-				String[] split = sw.toString().split("\n");
-				context.write(new Text(split[0]+":"+split[1]), NullWritable.get());
+				out.seq = sw.seq;
+				context.write(out, NullWritable.get());
 			}
         }		
 	}

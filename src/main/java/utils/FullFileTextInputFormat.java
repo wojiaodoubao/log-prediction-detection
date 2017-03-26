@@ -1,4 +1,4 @@
-package prediction;
+package utils;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.JobContext;

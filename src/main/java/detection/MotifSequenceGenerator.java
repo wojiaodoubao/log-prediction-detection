@@ -4,9 +4,9 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import motif.Meta;
-import prediction.SeqMeta;
-import prediction.SeqWritable;
-import prediction.SeqWritable.Index;
+import utils.SeqMeta;
+import utils.SeqWritable;
+import utils.SeqWritable.Index;
 
 public class MotifSequenceGenerator {
 	public static void main(String args[]){//测试！
@@ -135,7 +135,6 @@ public class MotifSequenceGenerator {
 			long gap,double POD,double FAR,Map<String,Boolean> logLabel){
 		word = new ArrayList<SeqWritable>();
 		word.addAll(wordSet);
-		SeqWritable.reverse = -1;//递减序
 		Collections.sort(word);
 		this.gap = gap;
 		this.POD = POD;

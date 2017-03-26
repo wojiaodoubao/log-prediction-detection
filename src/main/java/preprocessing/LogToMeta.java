@@ -1,4 +1,4 @@
-package prediction;
+package preprocessing;
 
 import java.io.File;
 import java.io.IOException;

@@ -15,16 +15,17 @@ import java.util.Map.Entry;
 import java.io.*;
 
 import prediction.FrequentSequenceGenerator;
-import prediction.SeqMeta;
-import prediction.SeqWritable;
-import prediction.SeqWritable.Index;
+import utils.SeqMeta;
+import utils.SeqWritable;
 import utils.StaticInfo;
+import utils.SeqWritable.Index;
 
 public class MiningWithIndexAndSID {
 	public static void main(String args[]) throws NumberFormatException, IOException{
 //		String directory = StaticInfo.EXPERIMENT_ONE_DIRECTORY;
-		String directory = "/home/belan/Desktop/MetaFileSplit";		
-		MiningWithIndexAndSID mi = new MiningWithIndexAndSID(directory,(long)1000,3);		
+//		String directory = "/home/belan/Desktop/MetaFileSplit";
+		String directory = "/home/belan/Desktop/正确输出数据2/MetaFileSplit";
+		MiningWithIndexAndSID mi = new MiningWithIndexAndSID(directory,(long)6000,2);		
 		long time = System.currentTimeMillis();
 		Set<SeqWritable> res = mi.getFrequentSequence();
 		time = System.currentTimeMillis()-time;

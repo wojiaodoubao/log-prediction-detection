@@ -47,7 +47,7 @@ log_meta+'\t'+logName1+'\t'+time1+','+time2+','+...+','+timen+'\t'+logName1+'\t'
 4,1	-2147483648,-2
 2,4,3	-2147483648,-4,-2
 -----------------------------------------------
-【DistributedRuleGenerator】：最终规则
+【RuleScoreToRules】：最终规则
 前缀+'->'+后缀
 例：
 ->0

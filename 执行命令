@@ -10,3 +10,5 @@ hadoop jar ./ts.jar prediction.MetaFileSplit /TimeSeries/30000-out/DataPreproces
 prediction.FrequentSequenceDiscovery
 hadoop jar ./ts.jar prediction.FrequentSequenceDiscovery /TimeSeries/30000-out/MetaFileSplit /TimeSeries/30000-out/Sequence /TimeSeries/30000-out/Dict/part-r-00000 6000 2
 三.规则产生 
+hadoop jar ./ts.jar prediction.DistributedRuleGenerator /TimeSeries/30000-out/Sequence /TimeSeries/30000-out/RuleScore /TimeSeries/experiment-data-30000 5 8 4 0.5 /TimeSeries/30000-out/Dict/part-r-00000
+hadoop jar ./ts.jar prediction.RuleScoreToRules /TimeSeries/30000-out/RuleScore /TimeSeries/30000-out/Rules

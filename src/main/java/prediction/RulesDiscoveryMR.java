@@ -37,6 +37,9 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import motif.Meta;
+import utils.NoIndexSeqWritable;
+import utils.SeqMeta;
+import utils.TimeMeta;
 import utils.Utils;
 /**
  * 棒！
@@ -67,9 +70,9 @@ import utils.Utils;
  * 0,4:log3,1466045153000,1466045156000	log2,1466045152000,1466045154000
  * 2,3,4:log3,1466045152000,1466045156000,1466045154000,1466045156000	log1,1466045155000,1466045158000
  * */
-public class DistributedRuleGenerator extends Configured implements Tool{
+public class RulesDiscoveryMR extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
-		ToolRunner.run(new DistributedRuleGenerator(), args);//ToolRunner.run()方法中为Configuration赋了初值。		
+		ToolRunner.run(new RulesDiscoveryMR(), args);//ToolRunner.run()方法中为Configuration赋了初值。		
 	}
 	private static final String LOG_PATH = "log.path";
 	private static final String REDUCE_NUM = "my.reduce.num";
@@ -115,11 +118,11 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 		Job job = Job.getInstance(getConf());
 		//构造分布式缓存，符号链接默认就是开启(1.0版本的时候需要手动开启，Job.createSymlink())
 		job.addCacheFile(dictPath);		
-	    job.setJarByClass(DistributedRuleGenerator.class);
+	    job.setJarByClass(RulesDiscoveryMR.class);
 	    job.setInputFormatClass(TextInputFormat.class);
 	    
 	    job.setMapOutputKeyClass(IntWritable.class);//日志序号
-	    job.setMapOutputValueClass(SeqWritable.class);//频繁序列
+	    job.setMapOutputValueClass(NoIndexSeqWritable.class);//频繁序列
 	    job.setOutputKeyClass(Text.class);
 	    job.setOutputValueClass(Text.class);
 
@@ -130,7 +133,7 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 	    
-	    System.out.println("提交DistributedRuleGenerator任务");
+	    System.out.println("提交RulesDiscoveryMR任务");
 	    boolean status = job.waitForCompletion(true);
 	    if (status) {
 	        return 0;
@@ -138,7 +141,7 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 	        return 1;
 	    }	    
 	}
-	public static class InnerMapper extends Mapper<Object,Text,IntWritable,SeqWritable>{
+	public static class InnerMapper extends Mapper<Object,Text,IntWritable,NoIndexSeqWritable>{
 		private int reducer_num = 0;
 		@Override
 		public void setup(Context context) throws IOException, InterruptedException{
@@ -151,13 +154,13 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 			for(String t:s[0].split(",")){
 				list.add(SeqMeta.getSeqMetaBySID(Long.parseLong(t)));
 			}
-			SeqWritable sw = new SeqWritable(list,null);
+			NoIndexSeqWritable nsw = new NoIndexSeqWritable(list);
 			for(int i=0;i<reducer_num;i++){
-				context.write(new IntWritable(i), sw);
+				context.write(new IntWritable(i), nsw);
 			}
 		} 		
 	}
-	public static class InnerReducer extends Reducer<IntWritable,SeqWritable,Text,Text>{
+	public static class InnerReducer extends Reducer<IntWritable,NoIndexSeqWritable,Text,Text>{
 		private long gap = 0;
 		private long ruleGap = 0;
 		private int cardinality = 0;
@@ -183,18 +186,17 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 			br.close();
 		}		
 		@Override
-		public void reduce(IntWritable key, Iterable<SeqWritable> values, Context context) throws IOException, InterruptedException{
+		public void reduce(IntWritable key, Iterable<NoIndexSeqWritable> values, Context context) throws IOException, InterruptedException{
 			Path path = new Path(pathList.get(key.get()));
 			TimeMeta[] logSeq = null;
 			try {
 				logSeq = getLogSeq(path,context.getConfiguration(),dictMap);
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			if(logSeq==null)return;
-			RuleDiscovery rd = new RuleDiscovery(logSeq,cardinality,gap,ruleGap,firedThreshold);
-			for(SeqWritable v:values){//对每一个频繁序列
+			RulesGenerator rd = new RulesGenerator(logSeq,cardinality,gap,ruleGap,firedThreshold);
+			for(NoIndexSeqWritable v:values){//对每一个频繁序列
 				SeqMeta[] freSeq = new SeqMeta[v.seq.size()];
 				for(int i=0;i<v.seq.size();i++)
 					freSeq[i] = v.seq.get(i);
@@ -206,7 +208,7 @@ public class DistributedRuleGenerator extends Configured implements Tool{
 				//构造输出Key
 				StringBuffer sb = new StringBuffer();
 				for(SeqMeta m:v.seq){
-					sb.append(m.sid+",");
+					sb.append(m.getSID()+",");
 				}
 				if(sb.charAt(sb.length()-1)==',')
 					sb.deleteCharAt(sb.length()-1);

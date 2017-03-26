@@ -1,4 +1,4 @@
-package prediction;
+package utils;
 
 import motif.Meta;
 
@@ -21,5 +21,7 @@ public class SIDMeta extends Meta{
 	public String toString() {
 		return sid+"";
 	}
-
+	public long getSID(){
+		return this.sid;
+	}
 }

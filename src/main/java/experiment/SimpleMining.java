@@ -16,8 +16,9 @@ import utils.StaticInfo;
 public class SimpleMining {
 	public static void main(String args[]) throws IOException, ParseException{
 //		String directory = StaticInfo.EXPERIMENT_ONE_DIRECTORY;
-		String directory = "/home/belan/Desktop/实验一数据";		
-		SimpleMining sm = new SimpleMining(directory,(long)1000,3);			
+//		String directory = "/home/belan/Desktop/实验一数据";
+		String directory = "/home/belan/Desktop/实验数据2";
+		SimpleMining sm = new SimpleMining(directory,(long)6000,2);			
 		long time = System.currentTimeMillis();		
 		Set<List<LogRecord>> result = sm.miningFrequentSequence();
 		time = System.currentTimeMillis() - time;		

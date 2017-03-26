@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class EP1 extends ErrorPrediction{
+import utils.SeqMeta;
+import utils.TimeMeta;
 
-	public EP1(List<RuleNode> rTree, Map<String, Long> logToSidDict, Map<Long, String> sidToLogDict, long ruleGap,
+public class ErrorPredictionImpl extends ErrorPrediction{
+
+	public ErrorPredictionImpl(List<RuleNode> rTree, Map<String, Long> logToSidDict, Map<Long, String> sidToLogDict, long ruleGap,
 			long gap) {
 		super(rTree, logToSidDict, sidToLogDict, ruleGap, gap);
 	}

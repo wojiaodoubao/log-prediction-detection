@@ -1,4 +1,4 @@
-package prediction;
+package utils;
 
 import java.io.IOException;
 

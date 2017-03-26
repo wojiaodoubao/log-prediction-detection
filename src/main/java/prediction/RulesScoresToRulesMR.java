@@ -27,9 +27,9 @@ import utils.Utils;
  * 2,4,3	-2147483648,-4,-2
  * 输出：最终规则
  * */
-public class RuleScoreToRules  extends Configured implements Tool{
+public class RulesScoresToRulesMR  extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
-		ToolRunner.run(new RuleScoreToRules(), args);//ToolRunner.run()方法中为Configuration赋了初值。
+		ToolRunner.run(new RulesScoresToRulesMR(), args);//ToolRunner.run()方法中为Configuration赋了初值。
 	}
 	public int run(String[] allArgs) throws Exception {
 	    //获取参数
@@ -43,7 +43,7 @@ public class RuleScoreToRules  extends Configured implements Tool{
 	    }
 
 		Job job = Job.getInstance(getConf());
-	    job.setJarByClass(DistributedRuleGenerator.class);
+	    job.setJarByClass(RulesScoresToRulesMR.class);
 	    job.setInputFormatClass(TextInputFormat.class);
 	    
 	    job.setMapOutputKeyClass(Text.class);//序列
@@ -57,7 +57,7 @@ public class RuleScoreToRules  extends Configured implements Tool{
 	    FileInputFormat.setInputPaths(job, new Path(args[0]));
 	    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 	    
-	    System.out.println("提交RuleScoreRules任务");
+	    System.out.println("提交RulesScoresToRulesMR任务");
 	    boolean status = job.waitForCompletion(true);
 	    if (status) {
 	        return 0;
