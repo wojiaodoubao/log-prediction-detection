@@ -1,6 +1,7 @@
 import java.util.Scanner;
 
 import prediction.FrequentSequenceDiscoveryMR;
+import prediction.RemoveDuplicatedSequenceMR;
 import prediction.RulesDiscoveryMR;
 import prediction.RulesScoresToRulesMR;
 import preprocessing.DataPreprocessing;
@@ -39,10 +40,15 @@ public class Main {
 		//FrequentSequenceDiscovery
 		String[] FrequentSequenceDiscoveryArgs = new String[5];
 		FrequentSequenceDiscoveryArgs[0] = MetaFileSplitArgs[1]+"/part-r-00000";
-		FrequentSequenceDiscoveryArgs[1] = outputPath+"/Sequences";
+		//FrequentSequenceDiscoveryArgs[1] = outputPath+"/Sequences";
+		FrequentSequenceDiscoveryArgs[1] = outputPath+"/DuplicatedSequences";
 		FrequentSequenceDiscoveryArgs[2] = LogToMetaArgs[1]+"/part-r-00000";
 		FrequentSequenceDiscoveryArgs[3] = "60000";
 		FrequentSequenceDiscoveryArgs[4] = "2";
+		//RemoveDuplicatedSequenceMR
+		String[] RemoveDuplicatedSequenceMRArgs = new String[2];
+		RemoveDuplicatedSequenceMRArgs[0] = FrequentSequenceDiscoveryArgs[1];
+		RemoveDuplicatedSequenceMRArgs[1] = outputPath+"/Sequences";
 		//DistributedRuleGenerator
 		String[] DistributedRuleGeneratorArgs = new String[8];
 		DistributedRuleGeneratorArgs[0] = FrequentSequenceDiscoveryArgs[1];
@@ -58,13 +64,34 @@ public class Main {
 		RuleScoreToRulesArgs[0] = DistributedRuleGeneratorArgs[1];
 		RuleScoreToRulesArgs[1] = outputPath+"/Rules";
 		//执行
+		long time = System.currentTimeMillis();
 		DataPreprocessing.main(DataPreprocessingArgs);
+		System.out.println("DataPreprocessing:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();
 		LogToMeta.main(LogToMetaArgs);
+		System.out.println("LogToMeta:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();		
 		MetaFileSplit.main(MetaFileSplitArgs);
+		System.out.println("MetaFileSplit:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();		
 		FrequentSequenceDiscoveryMR.main(FrequentSequenceDiscoveryArgs);
-		for(String ss:DistributedRuleGeneratorArgs)
-			System.out.println(ss);
+		System.out.println("FrequentSequenceDiscovery:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();
+		RemoveDuplicatedSequenceMR.main(RemoveDuplicatedSequenceMRArgs);
+		System.out.println("RemoveDuplicatedSequenceMR:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();		
 		RulesDiscoveryMR.main(DistributedRuleGeneratorArgs);
+		System.out.println("RuleDiscoveryMR:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();		
 		RulesScoresToRulesMR.main(RuleScoreToRulesArgs);
+		System.out.println("RulesScoresToRulesMR:"+(System.currentTimeMillis()-time));
+		
+		time = System.currentTimeMillis();		
 	}
 }

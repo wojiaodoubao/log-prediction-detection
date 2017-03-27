@@ -18,6 +18,9 @@ hadoop jar ./ts.jar prediction.RuleScoreToRules /TimeSeries/30000-out/RuleScore 
 
 
 -------------experiment-small---------------------------
+hadoop fs -rm -r /TimeSeries/experiment-small-out
+hadoop fs -mkdir /TimeSeries/experiment-small-out
+
 一.预处理：
 步骤一：preprocessing.DataPreprocessing
 hadoop jar /home/belan/Desktop/ts.jar preprocessing.DataPreprocessing /TimeSeries/experiment-small /TimeSeries/experiment-small-out/DataPreprocessing
