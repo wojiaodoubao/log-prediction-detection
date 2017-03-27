@@ -4,6 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Scanner;
 
@@ -33,9 +35,11 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import utils.SeqWritable;
 
 import utils.LogInputFormat;
 import utils.LogWritable;
+import utils.SeqWritable;
 import utils.Utils;
 
 /**
@@ -52,7 +56,7 @@ public class DataPreprocessing extends Configured implements Tool{
 	}
 	public int run(String[] allArgs) throws Exception {
 	    //设置输出分隔符，conf的设置要先于Job的构造
-	    this.getConf().set("mapreduce.output.textoutputformat.separator",SPLIT);
+	    this.getConf().set("mapreduce.output.textoutputformat.separator",SeqWritable.SID_LOG_SPLIT);
 		
 		Job job = Job.getInstance(getConf());
 	    job.setJarByClass(DataPreprocessing.class);
@@ -91,7 +95,6 @@ public class DataPreprocessing extends Configured implements Tool{
 	        return 1;
 	    }
 	}	
-	public static final String SPLIT = "\t";
 	
 	private static class SortComparator extends WritableComparator{
 		public SortComparator(){
@@ -153,39 +156,39 @@ public class DataPreprocessing extends Configured implements Tool{
             content = s[1].toString().substring(index+1, s[1].toString().length());
             
             LogWritable outkey = new LogWritable(content,logFileName,time);
-//			System.out.println(outkey+"\n"+logFileName+":"+time);
             context.write(outkey,new Text(logFileName+"\n"+time));
 		} 		
 	}
 	private static class PreReducer extends Reducer<LogWritable,Text,Text,Text>{
-		//输出格式：
-		//log1
-		//time0,time1,time2
-		//log2
-		//
-		//log3
-		//time0,time1
+		private SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
+		/**
+		 * 将结果按照类SeqWritable.toString()格式输出
+		 * */
         @Override
 		public void reduce(LogWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
-//        	System.out.println("in Reduce()");
         	StringBuffer out = new StringBuffer();
         	String lastLogFile = null;
         	for(Text value:values){
         		String[] s = value.toString().split("\n");
         		if(lastLogFile==null){
         			lastLogFile = s[0];
-        			out.append(s[0]+SPLIT+s[1]+",");
+        			out.append(s[0]+SeqWritable.TIME_SPLIT);
         		}
-        		else if(s[0].equals(lastLogFile)){
-        			out.append(s[1]+",");
-        		}
-        		else{
+        		else if(!s[0].equals(lastLogFile)){
         			lastLogFile = s[0];
-        			out.deleteCharAt(out.length()-1);//删除最后一个','
-        			out.append(SPLIT+s[0]+SPLIT+s[1]+",");
+        			if(out.length()>0&&out.charAt(out.length()-1)==SeqWritable.TIME_SPLIT.charAt(0))
+        				out.deleteCharAt(out.length()-1);//删除最后一个','
+        			out.append(SeqWritable.SID_LOG_SPLIT+s[0]+SeqWritable.TIME_SPLIT);
         		}
+    			try {
+					long time = sdf.parse(s[1]).getTime();
+        			out.append(time+SeqWritable.TIME_SPLIT+time+SeqWritable.TIME_SPLIT);						
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}        		
         	}
-        	out.deleteCharAt(out.length()-1);//删除最后一个','
+        	if(out.length()>0&&out.charAt(out.length()-1)==SeqWritable.TIME_SPLIT.charAt(0))
+        		out.deleteCharAt(out.length()-1);//删除最后一个','
         	context.write(key.content, new Text(out.toString()));
         }		
 	}

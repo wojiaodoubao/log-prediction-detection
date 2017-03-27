@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +32,10 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.SeqMeta;
+import utils.SeqWritable;
 import utils.Utils;
+import utils.SeqWritable.Index;
 
 public class MetaFileSplit extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
@@ -88,15 +94,15 @@ public class MetaFileSplit extends Configured implements Tool{
 				dictMap.put(s, sid++);
 			}
 			br.close();
-		}		
+		}	
+		private SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
 		@Override
-        public void map(Object key,Text value, Context context) throws IOException, InterruptedException {		
-			//直接FS写到HDFS，每条log一个文件，坏处是写了太多小文件，或者一行一个也行
-			//再想想吧
-			String s = value.toString();
-			int index = s.indexOf(DataPreprocessing.SPLIT);
+        public void map(Object key,Text value, Context context) throws IOException, InterruptedException {
+			StringBuffer s = new StringBuffer(value.toString());
+			int index = s.indexOf(SeqWritable.SID_LOG_SPLIT);
 			if(index<0)return;
-			long logMeta = dictMap.get(s.substring(0, index));
+			Long logMeta = dictMap.get(s.substring(0, index));
+			if(logMeta==null)return;
 			Text outK = new Text(logMeta+s.substring(index,s.length()));
 			context.write(outK, NullWritable.get());
 		} 		

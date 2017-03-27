@@ -22,7 +22,7 @@ public class NoIndexSeqWritable implements Writable,Comparable<NoIndexSeqWritabl
 	@Override
 	public String toString(){
 		StringBuffer sbuffer = new StringBuffer();
-		if(seq!=null){
+		if(seq!=null&&seq.size()>0){
 			for(SeqMeta m:seq){
 				sbuffer.append(m+",");
 			}
@@ -118,8 +118,12 @@ public class NoIndexSeqWritable implements Writable,Comparable<NoIndexSeqWritabl
 		//第二个NoneIndexSeqWritable对象
 		NoIndexSeqWritable w = new NoIndexSeqWritable(seq);
 		seq = new ArrayList<SeqMeta>();
-		seq.add(SeqMeta.getSeqMetaBySID((long)5));
-		NoIndexSeqWritable w2 = new NoIndexSeqWritable(seq);		
+//		seq.add(SeqMeta.getSeqMetaBySID((long)5));
+		NoIndexSeqWritable w2 = new NoIndexSeqWritable(null);	
+		
+		System.out.println(w+"#");
+		System.out.println(w2+"#");
+		
 		//测试，写两遍读两遍，Pass
 		NoIndexSeqWritable r = new NoIndexSeqWritable(null);
 		RandomAccessFile out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");		
@@ -128,9 +132,9 @@ public class NoIndexSeqWritable implements Writable,Comparable<NoIndexSeqWritabl
 		out.close();
 		out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");
 		r.readFields(out);
-		System.out.println(r.seq);
+		System.out.println(r+"$");
 		r.readFields(out);
-		System.out.println(r.seq);	
+		System.out.println(r+"$");	
 		out.close();		
 	}	
 }

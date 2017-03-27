@@ -1,3 +1,4 @@
+-------------experiment-30000---------------------------
 一.预处理：
 步骤一：prediction.DataPreprocessing
 hadoop jar ./ts.jar prediction.DataPreprocessing /TimeSeries/experiment-data-30000 /TimeSeries/30000-out/DataPreprocessing
@@ -12,3 +13,22 @@ hadoop jar ./ts.jar prediction.FrequentSequenceDiscovery /TimeSeries/30000-out/M
 三.规则产生 
 hadoop jar ./ts.jar prediction.DistributedRuleGenerator /TimeSeries/30000-out/Sequence /TimeSeries/30000-out/RuleScore /TimeSeries/experiment-data-30000 5 8 4 0.5 /TimeSeries/30000-out/Dict/part-r-00000
 hadoop jar ./ts.jar prediction.RuleScoreToRules /TimeSeries/30000-out/RuleScore /TimeSeries/30000-out/Rules
+
+
+
+
+-------------experiment-small---------------------------
+一.预处理：
+步骤一：preprocessing.DataPreprocessing
+hadoop jar /home/belan/Desktop/ts.jar preprocessing.DataPreprocessing /TimeSeries/experiment-small /TimeSeries/experiment-small-out/DataPreprocessing
+步骤二：preprocessing.LogToMeta
+hadoop jar /home/belan/Desktop/ts.jar preprocessing.LogToMeta /TimeSeries/experiment-small-out/DataPreprocessing /TimeSeries/experiment-small-out/Dict
+步骤三：preprocessing.MetaFileSplit
+hadoop jar /home/belan/Desktop/ts.jar preprocessing.MetaFileSplit /TimeSeries/experiment-small-out/DataPreprocessing /TimeSeries/experiment-small-out/MetaFileSplit /TimeSeries/experiment-small-out/Dict/part-r-00000
+
+二.频繁序列模式挖掘
+prediction.FrequentSequenceDiscoveryMR
+hadoop jar /home/belan/Desktop/ts.jar prediction.FrequentSequenceDiscoveryMR /TimeSeries/experiment-small-out/MetaFileSplit /TimeSeries/experiment-small-out/Sequence /TimeSeries/experiment-small-out/Dict/part-r-00000 6000 2
+三.规则产生 
+hadoop jar /home/belan/Desktop/ts.jar prediction.DistributedRuleGenerator /TimeSeries/experiment-small-out/Sequence /TimeSeries/experiment-small-out/RuleScore /TimeSeries/experiment-small 5 8 4 0.5 /TimeSeries/experiment-small-out/Dict/part-r-00000
+hadoop jar /home/belan/Desktop/ts.jar prediction.RuleScoreToRules /TimeSeries/experiment-small-out/RuleScore /TimeSeries/experiment-small-out/Rules

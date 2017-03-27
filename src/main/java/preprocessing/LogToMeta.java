@@ -21,6 +21,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import utils.SeqWritable;
 import utils.Utils;
 
 /**
@@ -73,7 +74,7 @@ public class LogToMeta  extends Configured implements Tool{
 		@Override
         public void map(Object key,Text value, Context context) throws IOException, InterruptedException {
 			String s = value.toString();
-			int index = s.indexOf(DataPreprocessing.SPLIT);
+			int index = s.indexOf(SeqWritable.SID_LOG_SPLIT);
 			if(index<0)return;
 			context.write(new IntWritable(s.length()-1-index), new Text(s.substring(0,index)));			
 		} 		

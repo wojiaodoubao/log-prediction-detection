@@ -132,33 +132,41 @@ public class FrequentSequenceDiscoveryMR extends Configured implements Tool{
 			this.metaNum = Integer.parseInt(context.getConfiguration().get(META_NUM));
 			this.frequency = Integer.parseInt(context.getConfiguration().get(FREQUENCY));
 		}
+		private SeqWritable sw = new SeqWritable();
 		@Override
         public void map(LongWritable key,Text value, Context context) throws IOException, InterruptedException {
-			SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
-			String[] s = value.toString().split("\t");
-			if(s==null||s.length<=0)return;
-			//Construct meta list
-			Long sid = Long.parseLong(s[0]);
-			List<SeqMeta> list = new ArrayList<SeqMeta>();
-			list.add(SeqMeta.getSeqMetaBySID(sid));
-			//construct indexMap
-			Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
-			for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
-				List<Index> timelist = new ArrayList<Index>();
-				for(String time:s[i+1].split(",")){
-					Date date = null;
-					try {
-						date = sdf.parse(time);
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-					if(date!=null){
-						timelist.add(new Index(date.getTime(),date.getTime()));
-					}
-				}
-				indexMap.put(s[i], timelist);
+			try {
+				SeqWritable.createSeqWritableFromString(sw,value.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
 			}
-			SeqWritable sw = new SeqWritable(list,indexMap);
+			long sid = sw.seq.get(0).getSID();
+//			SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
+//			String[] s = value.toString().split("\t");
+//			if(s==null||s.length<=0)return;
+//			//Construct meta list
+//			Long sid = Long.parseLong(s[0]);
+//			List<SeqMeta> list = new ArrayList<SeqMeta>();
+//			list.add(SeqMeta.getSeqMetaBySID(sid));
+//			//construct indexMap
+//			Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
+//			for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
+//				List<Index> timelist = new ArrayList<Index>();
+//				for(String time:s[i+1].split(",")){
+//					Date date = null;
+//					try {
+//						date = sdf.parse(time);
+//					} catch (ParseException e) {
+//						e.printStackTrace();
+//					}
+//					if(date!=null){
+//						timelist.add(new Index(date.getTime(),date.getTime()));
+//					}
+//				}
+//				indexMap.put(s[i], timelist);
+//			}
+//			SeqWritable sw = new SeqWritable(list,indexMap);
 			//直接把不频繁的删掉，减少传输量
 			if(FrequentSequenceGenerator.frequency(sw)>=frequency){
 				for(long i =sid;i<metaNum;i++){//核心代码，管理序列发射到对应reducer

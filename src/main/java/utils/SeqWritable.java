@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
 
+import preprocessing.DataPreprocessing;
 import utils.SeqWritable.Index;
 
 public class SeqWritable implements Writable,Comparable<SeqWritable>{
@@ -44,35 +45,93 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		this.seq = seq;
 		this.indexMap = indexMap;
 	}
+	
+	public static final String SID_LOG_SPLIT = "\t";
+	public static final String TIME_SPLIT = ",";
+	
 	@Override
 	public String toString(){
 		StringBuffer s = new StringBuffer();
 		//construct seq
-		if(seq!=null){
+		if(seq!=null&&seq.size()>0){
 			for(SeqMeta m:seq){
-				s.append(m+",");
+				s.append(m+SeqWritable.TIME_SPLIT);
 			}
 			if(s.charAt(s.length()-1)==','){
 				s.deleteCharAt(s.length()-1);
 			}
 		}
-		s.append("\n");
+		s.append(SID_LOG_SPLIT);
 		//construct index
-		if(indexMap!=null){
+		if(indexMap!=null&&indexMap.size()>0){
 			for(Entry<String, List<Index>> entry:indexMap.entrySet()){
-				s.append(entry.getKey()+",");
+				s.append(entry.getKey()+SeqWritable.TIME_SPLIT);
 				if(entry.getValue()!=null){
 					for(Index l:entry.getValue()){
-						s.append(l.start+","+l.end+",");
+						s.append(l.start+SeqWritable.TIME_SPLIT+l.end+SeqWritable.TIME_SPLIT);
 					}
 				}
 				if(s.charAt(s.length()-1)==',')s.deleteCharAt(s.length()-1);
-				s.append("\t");
+				s.append(SID_LOG_SPLIT);
 			}
+			if(s.charAt(s.length()-1)=='\t')s.deleteCharAt(s.length()-1);			
 		}
-		if(s.charAt(s.length()-1)=='\t')s.deleteCharAt(s.length()-1);
 		return s.toString();
 	}
+	/**
+	 * 根据SeqWritable.toString()的字符串，构造SeqWritable对象，并返回
+	 * */	
+	public static SeqWritable createSeqWritableFromString(String s){
+		SeqWritable res = new SeqWritable();
+		try {
+			createSeqWritableFromString(res,s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return res;
+	}
+	/**
+	 * 根据SeqWritable.toString()的字符串，构造SeqWritable对象，存入sw<br />
+	 * sw不能为null
+	 * @throws Exception 
+	 * */
+	public static void createSeqWritableFromString(SeqWritable sw,String s) throws Exception{
+		if(sw==null)
+			throw new Exception("The input SeqWritable obj shouldn't be null! ");
+		//init sw
+		if(sw.seq!=null)
+			sw.seq.clear();
+		else
+			sw.seq = new ArrayList<SeqMeta>();
+		if(sw.indexMap!=null)
+			sw.indexMap.clear();
+		else
+			sw.indexMap = new HashMap<String,List<Index>>();
+		//split s
+		String[] split = s.split(SeqWritable.SID_LOG_SPLIT);
+		//construct seq
+		if(split.length>0&&!split[0].equals("")){
+			for(String sid:split[0].split(SeqWritable.TIME_SPLIT)){
+				sw.seq.add(SeqMeta.getSeqMetaBySID(Long.parseLong(sid)));
+			}
+		}
+		//construct index 
+		for(int i=1;i<split.length;i++){
+			List<Index> list = new ArrayList<Index>();
+			String logName = null;
+			String[] ttt = split[i].split(SeqWritable.TIME_SPLIT);
+			for(int j=0;j<ttt.length-1;j++){
+				if(j==0)logName = ttt[j];
+				else{
+					long start = Long.parseLong(ttt[j]);
+					long end = Long.parseLong(ttt[j+1]);
+					list.add(new Index(start,end));
+					j++;
+				}
+			}
+			sw.indexMap.put(logName, list);
+		}
+	}	
 	public void write(DataOutput out) throws IOException {
 		String s = this.toString();
 		int size = s.getBytes().length;
@@ -83,40 +142,11 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		int size = in.readInt();//先获取长度
 		byte[] bytes = new byte[size];
 		in.readFully(bytes);//再读bytes，长度为size
-		String[] split = new String(bytes).split("\n");
-		String sequence = null;
-		if(split.length>0)
-			sequence = split[0];
-		String index = null;
-		if(split.length>1)
-			index = split[1];
-		//construct seq
-		seq = new ArrayList<SeqMeta>();
-		if(sequence!=null&&!sequence.equals("")){
-			for(String s:sequence.split(",")){
-				seq.add(SeqMeta.getSeqMetaBySID(Long.parseLong(s)));
-			}
-		}
-		//construct index 
-		indexMap = new HashMap<String,List<Index>>();
-		if(index!=null){
-			for(String tmp : index.split("\t")){
-				List<Index> list = new ArrayList<Index>();
-				String logName = null;
-				String[] ttt = tmp.split(",");
-				for(int j=0;j<ttt.length-1;j++){
-					if(j==0)logName = ttt[j];
-					else{
-						long start = Long.parseLong(ttt[j]);
-						long end = Long.parseLong(ttt[j+1]);
-						list.add(new Index(start,end));
-						j++;
-					}
-				}
-				indexMap.put(logName, list);
-			}
-		}
-		return;
+		try {
+			SeqWritable.createSeqWritableFromString(this,new String(bytes));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}			
 	}
 	@Override
 	public SeqWritable clone(){
@@ -143,7 +173,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 	 * 4	log1	2016-06-16 10:45:52,2016-06-16 10:45:56,2016-06-16 10:45:58	log2	2016-06-16 10:45:54	log3	2016-06-16 10:45:56 
 	 * */
 	public static SeqWritable deserializeSeqWritableFromString(String text){
-		String[] s = text.split("\t");
+		String[] s = text.split(SID_LOG_SPLIT);
 		if(s==null||s.length<=0)return null;
 		//Construct meta list
 		long sid = Long.parseLong(s[0]);
@@ -153,7 +183,7 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
 		for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
 			List<Index> timelist = new ArrayList<Index>();
-			for(String time:s[i+1].split(",")){
+			for(String time:s[i+1].split(SeqWritable.TIME_SPLIT)){
 				Date date = null;
 				try {
 					date = simpleDateFormat.parse(time);
@@ -169,48 +199,9 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 		SeqWritable sw = new SeqWritable(list,indexMap);
 		return sw;
 	}
-	public static void main(String args[]) throws IOException{
-		List<SeqMeta> seq = new ArrayList<SeqMeta>();//序列
-		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
-		seq.add(SeqMeta.getSeqMetaBySID((long)0));
-		seq.add(SeqMeta.getSeqMetaBySID((long)1));
-		seq.add(SeqMeta.getSeqMetaBySID((long)2));
-		List<Index> list = new ArrayList<Index>();
-		list.add(new Index((long) 10,(long)10));
-		list.add(new Index((long) 11,(long)11));
-		list.add(new Index((long) 12,(long)12));
-		indexMap.put("XX", list);
-		list = new ArrayList<Index>();
-		list.add(new Index((long) 110,(long)110));
-		list.add(new Index((long) 120,(long)120));
-		list.add(new Index((long) 130,(long)130));
-		indexMap.put("XXX", list);	
-		//测试，写两遍读两遍，确实对
-		SeqWritable w = new SeqWritable(seq, indexMap);
-//		SeqWritable w = new SeqWritable(seq, null);
-		seq = new ArrayList<SeqMeta>();
-		seq.add(SeqMeta.getSeqMetaBySID((long)5));
-		//seq==null，indexMap==null，4种组合，均可完成wirte&readFields
-		SeqWritable w2 = new SeqWritable(seq,indexMap);
-//		SeqWritable w2 = new SeqWritable(null, null);
-//		SeqWritable w2 = new SeqWritable(null, indexMap);
-//		SeqWritable w2 = new SeqWritable(seq, null);
-		
-		SeqWritable r = new SeqWritable(null,null);
-		RandomAccessFile out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");		
-		w.write(out);
-		w2.write(out);
-		out.close();
-		out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");
-		r.readFields(out);
-		System.out.println(r.seq);
-		System.out.println(r.indexMap);
-		r.readFields(out);
-		System.out.println(r.seq);
-		System.out.println(r.indexMap);	
-		out.close();		
-	}
+
 	private static final int reverse = -1;//reverse = 1;
+	
 	public int compareTo(SeqWritable obj) {
 		if(this==obj)return 0;
 		else if(obj instanceof SeqWritable){
@@ -252,5 +243,47 @@ public class SeqWritable implements Writable,Comparable<SeqWritable>{
 			}
 		}
 		return hash;
+	}
+
+	public static void main(String args[]) throws IOException{
+		List<SeqMeta> seq = new ArrayList<SeqMeta>();//序列
+		Map<String,List<Index>> indexMap = new HashMap<String,List<Index>>();
+		seq.add(SeqMeta.getSeqMetaBySID((long)0));
+		seq.add(SeqMeta.getSeqMetaBySID((long)1));
+		seq.add(SeqMeta.getSeqMetaBySID((long)2));
+		List<Index> list = new ArrayList<Index>();
+		list.add(new Index((long) 10,(long)10));
+		list.add(new Index((long) 11,(long)11));
+		list.add(new Index((long) 12,(long)12));
+		indexMap.put("XX", list);
+		list = new ArrayList<Index>();
+		list.add(new Index((long) 110,(long)110));
+		list.add(new Index((long) 120,(long)120));
+		list.add(new Index((long) 130,(long)130));
+		indexMap.put("XXX", list);	
+		//测试，写两遍读两遍，确实对
+		SeqWritable w = new SeqWritable(seq, indexMap);
+//		SeqWritable w = new SeqWritable(seq, null);
+		seq = new ArrayList<SeqMeta>();
+		seq.add(SeqMeta.getSeqMetaBySID((long)5));
+		//seq==null，indexMap==null，4种组合，均可完成wirte&readFields
+//		SeqWritable w2 = new SeqWritable(seq,indexMap);
+		SeqWritable w2 = new SeqWritable(null, null);
+//		SeqWritable w2 = new SeqWritable(null, indexMap);
+//		SeqWritable w2 = new SeqWritable(seq, null);
+		
+		System.out.println("#"+w2+"#");
+		
+		SeqWritable r = new SeqWritable(null,null);
+		RandomAccessFile out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");		
+		w.write(out);
+		w2.write(out);
+		out.close();
+		out = new RandomAccessFile("/home/belan/Desktop/SequenceFile","rw");
+		r.readFields(out);
+		System.out.println("%"+r+"%");
+		r.readFields(out);
+		System.out.println("%"+r+"%");
+		out.close();		
 	}
 }
