@@ -112,12 +112,17 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 	    getConf().set(CARDINALITY, args[5]);
 	    //将firedThreshold传给Reducer
 	    getConf().set(FIRED_THRESHOLD, args[6]);
-	    //将dict文件缓存，Reducer读取
-	    URI dictPath = new URI(args[7]+"#"+SYMBOL_LINK);
+	    //分布式缓存字典文件
+	    Path dictPath = new Path(args[2]);
+	    List<String> filesPaths = RulesDiscoveryMR.filesOfPath(dictPath, getConf());
+	    URI[] dict = new URI[filesPaths.size()];
+	    for(int i=0;i<filesPaths.size();i++){
+	    	dict[i] = new Path(filesPaths.get(i)).toUri();
+	    }
 	    
 		Job job = Job.getInstance(getConf());
-		//构造分布式缓存，符号链接默认就是开启(1.0版本的时候需要手动开启，Job.createSymlink())
-		job.addCacheFile(dictPath);		
+		//构造分布式缓存，符号链接默认就是开启(1.0版本的时候需要手动开启，Job.createSymlink())	
+		job.setCacheFiles(dict);
 	    job.setJarByClass(RulesDiscoveryMR.class);
 	    job.setInputFormatClass(TextInputFormat.class);
 	    
@@ -178,12 +183,18 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 			//构造字典Map
 			dictMap = new HashMap<String,Long>();
 			long sid = 0;
-			BufferedReader br = new BufferedReader(new FileReader(SYMBOL_LINK));
-			String s = null;
-			while((s=br.readLine())!=null){
-				dictMap.put(s, sid++);
-			}
-			br.close();
+			Path[] cacheFiles = Job.getInstance(context.getConfiguration()).getLocalCacheFiles();
+			for(Path cache:cacheFiles){
+//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。				
+//				System.out.println(cache.toString());
+//				System.out.println(cache.getName());				
+				BufferedReader br = new BufferedReader(new FileReader(cache.getName()));
+				String s = null;
+				while((s=br.readLine())!=null){
+					dictMap.put(s, sid++);
+				}
+				br.close();
+			}		
 		}		
 		@Override
 		public void reduce(IntWritable key, Iterable<NoIndexSeqWritable> values, Context context) throws IOException, InterruptedException{
@@ -249,20 +260,26 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 	 * 如果path是文件，返回list只包含path；如果path是目录，递归目录返回所有文件；
 	 * @throws IOException 
 	 * */
-	private static List<String> filesOfPath(Path path,Configuration conf) throws IOException{
+	public static List<String> filesOfPath(Path path,Configuration conf) throws IOException{
 	    FileSystem fs = path.getFileSystem(conf);
 	    FileStatus status = fs.getFileStatus(path);
 	    List<String> filePath = new ArrayList<String>();
 	    if(status.isDirectory()){
 	    	for(FileStatus tmp:fs.listStatus(path)){
-	    		if(tmp.isFile())
-	    			filePath.add(tmp.getPath().toString());
+	    		if(tmp.isFile()){
+	    			String fileName = tmp.getPath().getName(); 
+	    			if(!fileName.matches("_.*")&&!fileName.matches("\\..*"))
+	    				filePath.add(tmp.getPath().toString());
+	    		}
 	    		else
 	    			filePath.addAll(filesOfPath(tmp.getPath(),conf));
 	    	}
 	    }
 	    else if(status.isFile()){
-	    	filePath.add(path.toString());
+			String fileName = status.getPath().getName(); 
+			if(!fileName.matches("_.*")&&!fileName.matches("\\..*"))
+				filePath.add(status.getPath().toString());
+
 	    }	
 	    Collections.sort(filePath);
 	    return filePath;

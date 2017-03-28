@@ -30,19 +30,19 @@ public class Main {
 		DataPreprocessingArgs[1] = outputPath+"/DataPreprocessing";
 		//预处理-LogToMeta
 		String[] LogToMetaArgs = new String[2];
-		LogToMetaArgs[0] = DataPreprocessingArgs[1]+"/part-r-00000";
+		LogToMetaArgs[0] = DataPreprocessingArgs[1];
 		LogToMetaArgs[1] = outputPath+"/Dict";
 		//预处理-MetaFileSplit
 		String[] MetaFileSplitArgs = new String[3];
-		MetaFileSplitArgs[0] = LogToMetaArgs[0];
+		MetaFileSplitArgs[0] = DataPreprocessingArgs[1];
 		MetaFileSplitArgs[1] = outputPath+"/MetaFileSplit";
-		MetaFileSplitArgs[2] = LogToMetaArgs[1]+"/part-r-00000";
+		MetaFileSplitArgs[2] = LogToMetaArgs[1];
 		//FrequentSequenceDiscovery
 		String[] FrequentSequenceDiscoveryArgs = new String[5];
-		FrequentSequenceDiscoveryArgs[0] = MetaFileSplitArgs[1]+"/part-r-00000";
+		FrequentSequenceDiscoveryArgs[0] = MetaFileSplitArgs[1];
 		//FrequentSequenceDiscoveryArgs[1] = outputPath+"/Sequences";
 		FrequentSequenceDiscoveryArgs[1] = outputPath+"/DuplicatedSequences";
-		FrequentSequenceDiscoveryArgs[2] = LogToMetaArgs[1]+"/part-r-00000";
+		FrequentSequenceDiscoveryArgs[2] = LogToMetaArgs[1];
 		FrequentSequenceDiscoveryArgs[3] = "60000";
 		FrequentSequenceDiscoveryArgs[4] = "2";
 		//RemoveDuplicatedSequenceMR
@@ -51,14 +51,14 @@ public class Main {
 		RemoveDuplicatedSequenceMRArgs[1] = outputPath+"/Sequences";
 		//DistributedRuleGenerator
 		String[] DistributedRuleGeneratorArgs = new String[8];
-		DistributedRuleGeneratorArgs[0] = FrequentSequenceDiscoveryArgs[1];
+		DistributedRuleGeneratorArgs[0] = RemoveDuplicatedSequenceMRArgs[1];
 		DistributedRuleGeneratorArgs[1]	= outputPath+"/RuleScore";
 		DistributedRuleGeneratorArgs[2] = DataPreprocessingArgs[0];
 		DistributedRuleGeneratorArgs[3] = "5";
 		DistributedRuleGeneratorArgs[4] = "8";
 		DistributedRuleGeneratorArgs[5] = "4";
 		DistributedRuleGeneratorArgs[6] = "0.5";
-		DistributedRuleGeneratorArgs[7] = LogToMetaArgs[1]+"/part-r-00000";
+		DistributedRuleGeneratorArgs[7] = LogToMetaArgs[1];
 		//RuleScoreToRules
 		String[] RuleScoreToRulesArgs = new String[2];
 		RuleScoreToRulesArgs[0] = DistributedRuleGeneratorArgs[1];

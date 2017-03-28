@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -32,6 +34,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import prediction.RulesDiscoveryMR;
 import utils.SeqMeta;
 import utils.SeqWritable;
 import utils.Utils;
@@ -41,7 +44,6 @@ public class MetaFileSplit extends Configured implements Tool{
 	public static void main(String args[]) throws Exception{
 		ToolRunner.run(new MetaFileSplit(), args);//ToolRunner.run()方法中为Configuration赋了初值。	
 	}
-	private static final String SYMBOL_LINK = "dict";
 	public int run(String[] allArgs) throws Exception {		
 	    //获取参数
 		String[] args = new GenericOptionsParser(getConf(), allArgs).getRemainingArgs();
@@ -53,11 +55,17 @@ public class MetaFileSplit extends Configured implements Tool{
 	    	args[2] = sc.nextLine();//缓存字典
 	    	Utils.deletePath(args[1]);
 	    }		
-	    URI dictPath = new URI(args[2]+"#"+SYMBOL_LINK);
+	    //分布式缓存字典文件
+	    Path dictPath = new Path(args[2]);
+	    List<String> filesPaths = RulesDiscoveryMR.filesOfPath(dictPath, getConf());
+	    URI[] dict = new URI[filesPaths.size()];
+	    for(int i=0;i<filesPaths.size();i++){
+	    	dict[i] = new Path(filesPaths.get(i)).toUri();
+	    }
 	    
 		Job job = Job.getInstance(getConf());
 		//构造分布式缓存，符号链接默认就是开启(1.0版本的时候需要手动开启，Job.createSymlink())
-		job.addCacheFile(dictPath);
+		job.setCacheFiles(dict);
 	    job.setJarByClass(LogToMeta.class);
 //	    job.setInputFormatClass(FullFileTextInputFormat.class);
 	    job.setInputFormatClass(TextInputFormat.class);
@@ -83,17 +91,23 @@ public class MetaFileSplit extends Configured implements Tool{
 		private Map<String,Long> dictMap = null;
 		private List<String> dictList = null;
 		@Override
-		public void setup(Context context) throws IOException, InterruptedException{
+		public void setup(Context context) throws IOException, InterruptedException{			
 			//构造字典Map
 			dictMap = new HashMap<String,Long>();
 			dictList = new ArrayList<String>();
-			BufferedReader br = new BufferedReader(new FileReader(SYMBOL_LINK));
-			String s = null;
-			while((s=br.readLine())!=null){
-				dictList.add(s);
-				dictMap.put(s, sid++);
+			Path[] cacheFiles = Job.getInstance(context.getConfiguration()).getLocalCacheFiles(); 
+			for(Path cache:cacheFiles){
+//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。				
+//				System.out.println(cache.toString());
+//				System.out.println(cache.getName());
+				BufferedReader br = new BufferedReader(new FileReader(cache.getName()));
+				String s = null;
+				while((s=br.readLine())!=null){
+					dictList.add(s);
+					dictMap.put(s, sid++);
+				}
+				br.close();
 			}
-			br.close();
 		}	
 		private SimpleDateFormat sdf = new SimpleDateFormat(utils.StaticInfo.DATE_STRING);
 		@Override

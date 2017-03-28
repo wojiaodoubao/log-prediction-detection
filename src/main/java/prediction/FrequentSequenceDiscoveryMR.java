@@ -88,13 +88,16 @@ public class FrequentSequenceDiscoveryMR extends Configured implements Tool{
 	    int frequency = Integer.parseInt(args[4]);
 	    getConf().set(FREQUENCY, frequency+"");
 		//获取LogMeta数量
-	    int metaNum = 0;
 	    Path dictPath = new Path(args[2]);
+	    List<String> fileList = RulesDiscoveryMR.filesOfPath(dictPath, getConf());
+	    int metaNum = 0;
 	    FileSystem fs = dictPath.getFileSystem(getConf());
-	    Scanner sc = new Scanner(fs.open(dictPath));
-	    while(sc.hasNextLine()){
-	    	sc.nextLine();
-	    	metaNum++;
+	    for(String s:fileList){
+		    Scanner sc = new Scanner(fs.open(new Path(s)));
+		    while(sc.hasNextLine()){
+		    	sc.nextLine();
+		    	metaNum++;
+		    }
 	    }
 	    getConf().set(META_NUM, metaNum+"");
 
