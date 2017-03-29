@@ -47,10 +47,14 @@ public class RulesGenerator {
 	private long gap;//两个Meta间的间隔gap			[meta1]gap[meta2]gap[meta3] --ruleGap--> [meta4]gap[meta5]
 	private long ruleGap;//规则A->B中，A和B间最大间隔
 	private double firedThreshold;//规则A->B，logSeq中前缀与A不同的位数/|A|<=firedThreshold。
+	/**
+	 * logSeq子序列类</br>
+	 * 保存了子序列的start,end,distance(与目标序列不同的TimeMeta数)
+	 * */
 	private static class Index implements Comparable{
 		int start;
 		int end;
-		int distance;
+		int distance;//不同的位数目即为距离
 		public Index(int start,int end,int distance){
 			this.start = start;
 			this.end = end;
@@ -109,9 +113,7 @@ public class RulesGenerator {
 			else{
 				subSeq = iterateIndex(subSeq,freSeq[sp-1]);
 			}
-//			System.out.println(subSeq);
 			List<Index> firedSeq = filtrateAndSort(subSeq,sp);
-//			System.out.println(firedSeq);
 			//compute total bit save for result[sp];
 			int total = 0;
 			int n = 0;
@@ -119,8 +121,8 @@ public class RulesGenerator {
 			for(n=0;n<firedSeq.size();n++){
 				int subConsequentBits = Huffman(freSeq.length-sp);
 				int smallestDistance = freSeq.length-sp;
-				//firedSeq[n]->X   --X是一个序列；X起始time-firedSeq[n].time>ruleGap；X内任意相邻meta间隔<gap；
-				//logSeq[i].time-logSeq[firedSeq.get(n).end].time>ruleGap
+				//firedSeq[n]->X   --X是一个序列；   X起始时间戳 -    firedSeq[n]结束时间戳        <=ruleGap；X内任意相邻meta间隔<gap；
+				//                              logSeq[i].time-logSeq[firedSeq.get(n).end].time<=ruleGap
 				//枚举X每个可能的startPoint。
 				for(int i=firedSeq.get(n).end+1;i<=logSeq.length-(freSeq.length-sp);i++){
 					if(logSeq[i].getTime()-logSeq[firedSeq.get(n).end].getTime()>ruleGap)break;
@@ -128,7 +130,15 @@ public class RulesGenerator {
 					smallestDistance = tmp<smallestDistance?tmp:smallestDistance;
 				}
 				int subConsequentMDLbits = MDL(smallestDistance);
-				if(subConsequentBits-subConsequentMDLbits<=0)break;
+//2017-3-29：total-bit-save计算复杂度分析（已求得firedSeq的前提下）：
+//1.目标：要对每一个firedSeq都计算bit-save，最后得出total-bit-save。				
+//2.带break的代码原理：带break的前提是friedSeq按照firedSeq后缀与freSeq后缀距离由小到大排序，一旦subConsequentBits-subConsequentMDLbits==0则可以不再计算后边
+//3.带break则需要排序，带排序解法的时间复杂度：设计算一个firedSeq的最优后缀需要时间T，计算所有firedSeq最优后缀需要时间firedSeq.size()*T,
+//	排序firedSeq需要O(n*logN)，计算firedSeq bit-save需要O(firedSeq.size())；
+//	所以总时间是firedSeq.size()*T+O(n+logN)+O(firedSeq.size())。
+//4.不排序时间复杂度：O(firedSeq.size()*T)。
+//	对每一个firedSeq，计算最优后缀T和bit-save O(1)，共计T，总计O(firedSeq.size()*T)。				
+//				if(subConsequentBits-subConsequentMDLbits<=0)break;
 				total += subConsequentBits-subConsequentMDLbits;
 			}
 			total -= Huffman(freSeq.length-1-sp+1);
@@ -151,14 +161,17 @@ public class RulesGenerator {
 		return list;
 	}
 	/**
+	 * 基于logSeq所有长度为n的子序列，产生logSeq所有长度为n+1的子序列(start,end,distance)。
+	 * 时间复杂度O(list.size()*gap)；因为相邻日志时间戳差值>0，因此至多gap个候选。
+	 * 考虑gap无限大的情况，算法变成返回logSeq所有长度为n+1的子序列，数量会先增后减，数学归纳法易证：logSeq.size()/2层数量最多。
+	 * 
 	 * 返回logSeq所有长度为n+1的子序列<br/>
-	 * list:logSeq所有长度为n的子序列<br/>
-	 * m:freSeq第n+1个元素<br/>
-	 * gap:频繁序列gap限制
+	 * @param list logSeq所有长度为n的子序列<br/>
+	 * @param m freSeq第n+1个元素（用于计算distance）<br/>
 	 */
 	private List<Index> iterateIndex(List<Index> list,Meta m){
 		List<Index> newList = new ArrayList<Index>();
-		for(int i=0;i<list.size();i++){
+		for(int i=0;i<list.size();i++){//for each 长为n的子序列list.get(i)
 			Index in = list.get(i);
 			for(int j=in.end+1;j<logSeq.length;j++){
 				if((logSeq[j].getTime()-logSeq[in.end].getTime())>gap)break;
@@ -171,8 +184,9 @@ public class RulesGenerator {
 		return newList;
 	}
 	/**
-	 * 按照递增序，返回list中所有满足firedThreshold的子序列<br/>
-	 * length：list中序列的长度(因为Index只保存了首末位置和距离，没有长度信息)。
+	 * 返回list中所有满足firedThreshold的子序列<br/>
+	 * @param list 子序列列表
+	 * @param length list中序列的长度(因为Index只保存了首末位置和距离，没有长度信息)。
 	 * */
 	private List<Index> filtrateAndSort(List<Index> list,int length){
 		List<Index> res = new ArrayList<Index>();
@@ -180,7 +194,8 @@ public class RulesGenerator {
 			if(firedThreshold>=in.distance/length)
 				res.add(in);
 		}
-		Collections.sort(res);
+//2017-3-29	见 total-bit-save即使复杂度分析：
+//		Collections.sort(res);
 		return res;
 	}
 	/**

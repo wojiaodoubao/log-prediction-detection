@@ -32,6 +32,13 @@ public abstract class BruteForceFired {
 		System.out.println(new BRF1(mTree,10,1).scoreForLogSeq(logSeq));
 		System.out.println(new BRF2(mTree,10,0.5).scoreForLogSeq(logSeq));
 	}
+	/**
+	 * MotifNode Tree
+	 * 0 meta-x;sons[];score[];
+	 * 1 meta-y;sons[];score[];
+	 * 2 meta-z;sons[];score[];
+	 * ...
+	 * */
 	public static class MotifNode{
 		SeqMeta meta;//起始点meta==null，其他点meta不为空
 		Map<SeqMeta,Integer> sons;
