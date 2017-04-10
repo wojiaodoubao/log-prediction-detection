@@ -10,7 +10,7 @@ import utils.SIDMeta;
 import utils.SeqMeta;
 import utils.TimeMeta;
 /**
- * 暴力搜索法
+ * 基于字典树的暴力搜索法
  * 根据输入日志序列在motif集合上fired情况，计算概率。
  * */
 public abstract class BruteForceFired {
