@@ -13,17 +13,31 @@ import preprocessing.MetaFileSplit;
 
 /home/belan/Desktop/实验数据2
 /home/belan/Desktop/Out2
+ 
+/home/belan/Desktop/实验三数据/support-1024-1024
+/home/belan/Desktop/Out3/support-1024-1024
+1024
+6000
+
+/home/belan/Desktop/TTTTTT
+/home/belan/Desktop/TTTTTT1
+1
+6000
  * */
 public class Main {
 	public static void main(String arg[]) throws Exception{
-		if(arg==null||arg.length<2){
-			arg = new String[2];
+		if(arg==null||arg.length<4){
+			arg = new String[4];
 			Scanner sc = new Scanner(System.in);
 			arg[0] = sc.nextLine();
 			arg[1] = sc.nextLine();
+			arg[2] = sc.nextLine();//支持度
+			arg[3] = sc.nextLine();//gap
 		}
 		String inputPath = arg[0];
 		String outputPath = arg[1];
+		String support = arg[2];
+		String gap = arg[3];
 		//预处理-DataPreprocessing
 		String[] DataPreprocessingArgs = new String[2];
 		DataPreprocessingArgs[0] = inputPath;
@@ -43,8 +57,8 @@ public class Main {
 		//FrequentSequenceDiscoveryArgs[1] = outputPath+"/Sequences";
 		FrequentSequenceDiscoveryArgs[1] = outputPath+"/DuplicatedSequences";
 		FrequentSequenceDiscoveryArgs[2] = LogToMetaArgs[1];
-		FrequentSequenceDiscoveryArgs[3] = "60000";
-		FrequentSequenceDiscoveryArgs[4] = "2";
+		FrequentSequenceDiscoveryArgs[3] = gap;//【原】60000
+		FrequentSequenceDiscoveryArgs[4] = support;//【原】2
 		//RemoveDuplicatedSequenceMR
 		String[] RemoveDuplicatedSequenceMRArgs = new String[2];
 		RemoveDuplicatedSequenceMRArgs[0] = FrequentSequenceDiscoveryArgs[1];
@@ -54,8 +68,8 @@ public class Main {
 		DistributedRuleGeneratorArgs[0] = RemoveDuplicatedSequenceMRArgs[1];
 		DistributedRuleGeneratorArgs[1]	= outputPath+"/RuleScore";
 		DistributedRuleGeneratorArgs[2] = DataPreprocessingArgs[0];
-		DistributedRuleGeneratorArgs[3] = "5";
-		DistributedRuleGeneratorArgs[4] = "8";
+		DistributedRuleGeneratorArgs[3] = gap;//【原】5
+		DistributedRuleGeneratorArgs[4] = gap;//【原】8
 		DistributedRuleGeneratorArgs[5] = "4";
 		DistributedRuleGeneratorArgs[6] = "0.5";
 		DistributedRuleGeneratorArgs[7] = LogToMetaArgs[1];

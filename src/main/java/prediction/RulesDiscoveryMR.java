@@ -240,10 +240,13 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 		//写完这里之后，再写一个MR，把<freSeq,打分>聚集一下，给出最终结果！
 		List<TimeMeta> list = new ArrayList<TimeMeta>();
 		SimpleDateFormat sdf = new SimpleDateFormat(DATE_STRING);
-		FileSystem fs = path.getFileSystem(conf);
+	 	FileSystem fs = path.getFileSystem(conf);
 		Scanner sc = new Scanner(fs.open(path));
-		while(sc.hasNextLine()){
-			String[] s = sc.nextLine().split(",");
+		while(sc.hasNextLine()){			
+			String x = sc.nextLine();
+			if(x==null||x.equals("")||!x.contains(","))
+				continue;
+			String[] s = x.split(",");
 			Long sid = dictMap.get(s[1]);
 			Date date = sdf.parse(s[0]);
 			if(sid!=null&&date!=null)

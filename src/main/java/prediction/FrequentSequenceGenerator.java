@@ -200,7 +200,7 @@ public class FrequentSequenceGenerator {
 				swTmp.seq.add(0, c.seq.get(0));;//c+sw			
 				if(!newSeqSet.contains(swTmp)){//已经在第n+1层？
 					SeqMeta element = swTmp.seq.remove(swTmp.seq.size()-1);//构造c+sw[0:n-2]，即移除c+sw的最后一个元素
-					if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){//如果list是一个含a序列，则list需要在seqSet中出现						
+					if(!swTmp.seq.contains(one.get(0).seq.get(0))||seqSet.contains(swTmp)){//如果list是一个含a序列，则list需要在seqSet中出现
 						SeqWritable newSeq = merge(c,sw,gap,frequency);
 						if(newSeq!=null){
 							newSeqSet.add(newSeq);

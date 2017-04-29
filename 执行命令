@@ -1,10 +1,10 @@
 -------------experiment-30000---------------------------
 一.预处理：
-步骤一：prediction.DataPreprocessing
+步骤一：preprocessing.DataPreprocessing
 hadoop jar ./ts.jar prediction.DataPreprocessing /TimeSeries/experiment-data-30000 /TimeSeries/30000-out/DataPreprocessing
-步骤二：prediction.LogToMeta
+步骤二：preprocessing.LogToMeta
 hadoop jar ./ts.jar prediction.LogToMeta /TimeSeries/30000-out/DataPreprocessing /TimeSeries/30000-out/Dict
-步骤三：prediction.MetaFileSplit
+步骤三：preprocessing.MetaFileSplit
 hadoop jar ./ts.jar prediction.MetaFileSplit /TimeSeries/30000-out/DataPreprocessing /TimeSeries/30000-out/MetaFileSplit /TimeSeries/30000-out/Dict/part-r-00000
 
 二.频繁序列模式挖掘
