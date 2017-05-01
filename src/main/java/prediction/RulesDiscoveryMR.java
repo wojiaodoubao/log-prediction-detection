@@ -113,7 +113,7 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 	    //将firedThreshold传给Reducer
 	    getConf().set(FIRED_THRESHOLD, args[6]);
 	    //分布式缓存字典文件
-	    Path dictPath = new Path(args[2]);
+	    Path dictPath = new Path(args[7]);
 	    List<String> filesPaths = RulesDiscoveryMR.filesOfPath(dictPath, getConf());
 	    URI[] dict = new URI[filesPaths.size()];
 	    for(int i=0;i<filesPaths.size();i++){
@@ -185,13 +185,15 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 			long sid = 0;
 			Path[] cacheFiles = Job.getInstance(context.getConfiguration()).getLocalCacheFiles();
 			for(Path cache:cacheFiles){
-//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。				
-//				System.out.println(cache.toString());
-//				System.out.println(cache.getName());				
+//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。
+				System.out.println("$$$$$$$$$$$");
+				System.out.println(cache.toString());
+				System.out.println(cache.getName());				
 				BufferedReader br = new BufferedReader(new FileReader(cache.getName()));
 				String s = null;
 				while((s=br.readLine())!=null){
 					dictMap.put(s, sid++);
+					System.out.println(s+" "+(sid-1));
 				}
 				br.close();
 			}		
@@ -242,13 +244,14 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 		SimpleDateFormat sdf = new SimpleDateFormat(DATE_STRING);
 	 	FileSystem fs = path.getFileSystem(conf);
 		Scanner sc = new Scanner(fs.open(path));
-		while(sc.hasNextLine()){			
+		while(sc.hasNextLine()){	
 			String x = sc.nextLine();
 			if(x==null||x.equals("")||!x.contains(","))
 				continue;
 			String[] s = x.split(",");
 			Long sid = dictMap.get(s[1]);
 			Date date = sdf.parse(s[0]);
+			System.out.println(sid+" "+date.getTime());
 			if(sid!=null&&date!=null)
 				list.add(new TimeMeta(sid,date.getTime()));
 		}

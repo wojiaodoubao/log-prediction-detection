@@ -14,30 +14,47 @@ public class RulesGenerator {
 		//得分： 0        1  2  3
 		//  -2147483648  18 16 52
 		//因为我测试数据中两meta间间距都是1，而gap=5；可以自己找一个所有的:a(5/3),ab(5/3),abc(2/2)，显然abc推算出的是最准的。
-		TimeMeta[] logSeq = new TimeMeta[17];
-		logSeq[0] = new TimeMeta(5,1);
-		logSeq[1] = new TimeMeta(4,2);
+		TimeMeta[] logSeq = new TimeMeta[9];
+		logSeq[0] = new TimeMeta(1,1);
+		logSeq[1] = new TimeMeta(2,2);
 		logSeq[2] = new TimeMeta(3,3);
-		logSeq[3] = new TimeMeta(1,4);
-		logSeq[4] = new TimeMeta(5,5);
-		logSeq[5] = new TimeMeta(4,6);
-		logSeq[6] = new TimeMeta(5,7);
-		logSeq[7] = new TimeMeta(2,8);
-		logSeq[8] = new TimeMeta(1,9);
-		logSeq[9] = new TimeMeta(5,10);
-		logSeq[10] = new TimeMeta(4,11);
-		logSeq[11] = new TimeMeta(3,12);
-		logSeq[12] = new TimeMeta(1,13);
-		logSeq[13] = new TimeMeta(2,14);
-		logSeq[14] = new TimeMeta(1,15);
-		logSeq[15] = new TimeMeta(4,16);
-		logSeq[16] = new TimeMeta(5,17);
-		Meta[] freSeq = new TimeMeta[4];
-		freSeq[0] = new TimeMeta(5,1);
-		freSeq[1] = new TimeMeta(4,1);
+		logSeq[3] = new TimeMeta(6,4);
+		logSeq[4] = new TimeMeta(6,5);
+		logSeq[5] = new TimeMeta(6,6);		
+		logSeq[6] = new TimeMeta(1,7);
+		logSeq[7] = new TimeMeta(4,8);		
+		logSeq[8] = new TimeMeta(5,9);		
+//		TimeMeta[] logSeq = new TimeMeta[17];
+//		logSeq[0] = new TimeMeta(5,1);
+//		logSeq[1] = new TimeMeta(4,2);
+//		logSeq[2] = new TimeMeta(3,3);
+//		logSeq[3] = new TimeMeta(1,4);
+//		logSeq[4] = new TimeMeta(5,5);
+//		logSeq[5] = new TimeMeta(4,6);
+//		logSeq[6] = new TimeMeta(5,7);
+//		logSeq[7] = new TimeMeta(2,8);
+//		logSeq[8] = new TimeMeta(1,9);
+//		logSeq[9] = new TimeMeta(5,10);
+//		logSeq[10] = new TimeMeta(4,11);
+//		logSeq[11] = new TimeMeta(3,12);
+//		logSeq[12] = new TimeMeta(1,13);
+//		logSeq[13] = new TimeMeta(2,14);
+//		logSeq[14] = new TimeMeta(1,15);
+//		logSeq[15] = new TimeMeta(4,16);
+//		logSeq[16] = new TimeMeta(5,17);
+		Meta[] freSeq = new TimeMeta[6];
+		freSeq[0] = new TimeMeta(1,1);
+		freSeq[1] = new TimeMeta(2,1);
 		freSeq[2] = new TimeMeta(3,1);
-		freSeq[3] = new TimeMeta(1,1);
-		int[] res = new RulesGenerator(logSeq,4,5,8,0.5).scoreAllRules(freSeq);
+		freSeq[3] = new TimeMeta(1,1);		
+		freSeq[4] = new TimeMeta(4,1);
+		freSeq[5] = new TimeMeta(5,1);		
+//		Meta[] freSeq = new TimeMeta[4];
+//		freSeq[0] = new TimeMeta(5,1);
+//		freSeq[1] = new TimeMeta(4,1);
+//		freSeq[2] = new TimeMeta(3,1);
+//		freSeq[3] = new TimeMeta(1,1);
+		int[] res = new RulesGenerator(logSeq,2,5,8,0.8).scoreAllRules(freSeq);
 		for(int i:res)
 			System.out.println(i);
 	}
@@ -113,7 +130,7 @@ public class RulesGenerator {
 			else{
 				subSeq = iterateIndex(subSeq,freSeq[sp-1]);
 			}
-			List<Index> firedSeq = filtrateAndSort(subSeq,sp);
+			List<Index> firedSeq = filtrateAndSort(subSeq,sp);						
 			//compute total bit save for result[sp];
 			int total = 0;
 			int n = 0;
@@ -191,7 +208,7 @@ public class RulesGenerator {
 	private List<Index> filtrateAndSort(List<Index> list,int length){
 		List<Index> res = new ArrayList<Index>();
 		for(Index in:list){
-			if(firedThreshold>=in.distance/length)
+			if(firedThreshold>=((double)in.distance/length))
 				res.add(in);
 		}
 //2017-3-29	见 total-bit-save即使复杂度分析：

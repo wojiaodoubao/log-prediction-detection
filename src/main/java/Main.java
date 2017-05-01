@@ -63,10 +63,10 @@ public class Main {
 		DistributedRuleGeneratorArgs[0] = RemoveDuplicatedSequenceMRArgs[1];
 		DistributedRuleGeneratorArgs[1]	= outputPath+"/RuleScore";
 		DistributedRuleGeneratorArgs[2] = DataPreprocessingArgs[0];
-		DistributedRuleGeneratorArgs[3] = gap;//【原】5
-		DistributedRuleGeneratorArgs[4] = gap;//【原】8
+		DistributedRuleGeneratorArgs[3] = gap;
+		DistributedRuleGeneratorArgs[4] = gap;
 		DistributedRuleGeneratorArgs[5] = "4";
-		DistributedRuleGeneratorArgs[6] = "0.5";
+		DistributedRuleGeneratorArgs[6] = "0.8";
 		DistributedRuleGeneratorArgs[7] = LogToMetaArgs[1];
 		//RuleScoreToRules
 		String[] RuleScoreToRulesArgs = new String[2];

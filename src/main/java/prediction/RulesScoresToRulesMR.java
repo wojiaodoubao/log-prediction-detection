@@ -69,8 +69,9 @@ public class RulesScoresToRulesMR  extends Configured implements Tool{
 		@Override
         public void map(Object key,Text value, Context context) throws IOException, InterruptedException {		
 			String[] s = value.toString().split("\t");
-			if(s!=null&&s.length>=2)
+			if(s!=null&&s.length>=2){
 				context.write(new Text(s[0]), new Text(s[1]));
+			}
 		} 		
 	}
 	public static class InnerReducer extends Reducer<Text,Text,Text,NullWritable>{	
@@ -81,14 +82,16 @@ public class RulesScoresToRulesMR  extends Configured implements Tool{
 			for(Text v:values){
 				int i = 0;
 				for(String s:v.toString().split(",")){
-					if(i==0&&score[i]>=0)
-						score[i] = Integer.MIN_VALUE;
+					if(i==0){
+						;
+					}
 					else{
 						score[i] += Integer.parseInt(s);
 					}
 					i++;
 				}
 			}
+			score[0] = Integer.MIN_VALUE;
 			int maxIndex = 0;
 			for(int i=0;i<score.length;i++){
 				if(score[i]>score[maxIndex])
