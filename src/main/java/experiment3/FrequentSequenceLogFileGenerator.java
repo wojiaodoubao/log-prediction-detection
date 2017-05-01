@@ -17,27 +17,34 @@ import java.util.Random;
 public class FrequentSequenceLogFileGenerator {
 	public static void main(String args[]) throws IOException{
 		int logSize = 20;
-		int n = 1024;
-		int m = 1024;
+		int n = 4;
+		int m = 4;//支持度
 		long gap = 6000;
 		long increaseGap = 1000;
 		String[] charSet = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r"};
 		String[] frequentSeq = {"a","b","c","a","d","e"};
-		new FrequentSequenceLogFileGenerator(logSize,n,m,gap,increaseGap,charSet,frequentSeq)
-			.generate("/home/belan/Desktop/实验三数据/support-"+m+"-"+n);;
+//		String[] frequentSeq = {};
+		String[] randomSeq = {};
+		String dir = "/home/belan/Desktop/实验三数据-预测实验/support-"+m+"-"+n;
+		//产生m个文件，包含frequentSeq
+		new FrequentSequenceLogFileGenerator(logSize,m,0,gap,increaseGap,charSet,frequentSeq)
+			.generate(dir);
+		//产生n-m个随机日志文件，不一定包含frequentSeq
+		new FrequentSequenceLogFileGenerator(logSize,n-m,m,gap,increaseGap,charSet,randomSeq)
+			.generate(dir);
 	}
 	private int logSize;//日志条数
 	private int n;//文件数
-	private int m;//支持度
+	private int fileIndex;//文件编号起始
 	private long gap;//gap
 	private long increaseGap;//每两个日志间gap值
 	private String[] charSet;//字符集
 	private String[] frequentSeq;//预设频繁模式
-	public FrequentSequenceLogFileGenerator(int logSize,int n,
-			int m,long gap,long increaseGap,String[] charSet,String[] frequentSeq){
+	public FrequentSequenceLogFileGenerator(int logSize,int n,int fileIndex,
+			long gap,long increaseGap,String[] charSet,String[] frequentSeq){
 		this.logSize = logSize;
 		this.n = n;
-		this.m = m;
+		this.fileIndex = fileIndex;
 		this.gap = gap;
 		this.increaseGap = increaseGap;
 		this.charSet = charSet;
@@ -49,7 +56,7 @@ public class FrequentSequenceLogFileGenerator {
 			//create log file
 			String filePath = dir
 					+System.getProperty("file.separator")
-					+"log"+i;
+					+"log"+(fileIndex+i);
 			File logFile = new File(filePath);
 			if(logFile.exists()){
 				System.out.println(filePath+" already exists!");

@@ -311,7 +311,7 @@ public class MotifSequenceGenerator {
 	public static boolean satisfiedPOD(SeqWritable sw,double POD,Map<String,Boolean> logLabel,
 			int Positive_Log_Num,int Negative_Log_Num){
 		double[] score = compute_POD_FAR_CSI(sw, logLabel, Positive_Log_Num, Negative_Log_Num);
-		System.out.println(score[0]);
+		//System.out.println(score[0]);
 		if(score!=null&&score.length>=3&&score[0]>=POD)
 			return true;
 		return false;
@@ -386,9 +386,9 @@ public class MotifSequenceGenerator {
 			if(label==null)//出现位置对应的文件没有label
 				continue;
 			else if(label)
-				TP += entry.getValue().size();
+				TP += 1;//entry.getValue().size();
 			else
-				FP += entry.getValue().size();
+				FP += 1;//entry.getValue().size();
 		}
 		double POD = Positive_Log_Num==0?0:TP/(double)Positive_Log_Num;
 		double FAR = (TP+FP)==0?0:FP/(double)(TP+FP);
@@ -396,6 +396,13 @@ public class MotifSequenceGenerator {
 		result[0] = POD;
 		result[1] = FAR;
 		result[2] = CSI;
+		if(POD>1||FAR>1||CSI>1){
+			System.out.println(TP+" "+FP+" "+FN+" "+TN+" "+Positive_Log_Num+" "+Negative_Log_Num);
+			for(Entry<String, List<Index>> entry:sw.indexMap.entrySet()){//以日志文件为单位枚举索引
+				Boolean label = logLabel.get(entry.getKey());//日志文件label
+				System.out.println(entry.getKey()+" "+label);
+			}
+		}
 		return result;		
 	}
 }

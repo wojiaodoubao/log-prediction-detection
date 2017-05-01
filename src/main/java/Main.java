@@ -14,14 +14,9 @@ import preprocessing.MetaFileSplit;
 /home/belan/Desktop/实验数据2
 /home/belan/Desktop/Out2
  
-/home/belan/Desktop/实验三数据/support-1024-1024
-/home/belan/Desktop/Out3/support-1024-1024
-1024
-6000
-
-/home/belan/Desktop/TTTTTT
-/home/belan/Desktop/TTTTTT1
-1
+/home/belan/Desktop/实验三数据/support-64-64
+/home/belan/Desktop/Out3/supportX
+64
 6000
  * */
 public class Main {

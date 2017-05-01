@@ -33,6 +33,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import prediction.FrequentSequenceDiscoveryMR;
 import prediction.FrequentSequenceGenerator;
+import prediction.RulesDiscoveryMR;
 import prediction.FrequentSequenceDiscoveryMR.OneKeyOneReducerPartitioner;
 import preprocessing.LogToMeta;
 import utils.SeqMeta;
@@ -94,13 +95,16 @@ public class MotifSequenceDiscovery extends Configured implements Tool{
 	    getConf().set(D_FAR, FAR+"");
 	    getConf().set(LOG_LABEL, args[6]);
 		//获取LogMeta数量
-	    int metaNum = 0;
 	    Path dictPath = new Path(args[2]);
+	    List<String> fileList = RulesDiscoveryMR.filesOfPath(dictPath, getConf());
+	    int metaNum = 0;
 	    FileSystem fs = dictPath.getFileSystem(getConf());
-	    Scanner sc = new Scanner(fs.open(dictPath));
-	    while(sc.hasNextLine()){
-	    	sc.nextLine();
-	    	metaNum++;
+	    for(String s:fileList){
+		    Scanner sc = new Scanner(fs.open(new Path(s)));
+		    while(sc.hasNextLine()){
+		    	sc.nextLine();
+		    	metaNum++;
+		    }
 	    }
 	    getConf().set(META_NUM, metaNum+"");
 
@@ -153,19 +157,20 @@ public class MotifSequenceDiscovery extends Configured implements Tool{
 				else F++;
 			}
 		}
+		private SeqWritable sw = new SeqWritable();
 		@Override
         public void map(LongWritable key,Text value, Context context) throws IOException, InterruptedException {
-			//construct sid
-			String[] s = value.toString().split("\t");
-			if(s==null||s.length<=0)return;
-			int sid = Integer.parseInt(s[0]);
-			//construct SeqWritable from value
-			SeqWritable sw = SeqWritable.deserializeSeqWritableFromString(value.toString());
-			if(sw==null)return;
+			try {
+				SeqWritable.createSeqWritableFromString(sw,value.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+			long sid = sw.seq.get(0).getSID();
 			//直接把POD不合法的删掉
 			if(MotifSequenceGenerator.satisfiedPOD(sw, POD, logLabel,T,F)){
-				for(int i =sid;i<metaNum;i++){//核心代码，管理序列发射到对应reducer
-					context.write(new IntWritable(i), sw);
+				for(long i =sid;i<metaNum;i++){//核心代码，管理序列发射到对应reducer
+					context.write(new IntWritable((int)i), sw);
 				}
 			} 		
 		}
@@ -211,12 +216,17 @@ public class MotifSequenceDiscovery extends Configured implements Tool{
 			seqSet = new MotifSequenceGenerator(seqSet,gap,POD,FAR,logLabel).getMotifSequence();			
 			for(SeqWritable sw:seqSet){
 				double[] score = MotifSequenceGenerator.compute_POD_FAR_CSI(sw, logLabel, T, F);
-				String out = sw.toString().split("\n")[0];
-				out+=":";
-				if(score!=null&&score.length>=3){
-					out+=score[0]+","+score[1]+","+score[2];
+				StringBuilder sb = new StringBuilder();
+				for(SeqMeta m:sw.seq){
+					sb.append(m+",");
 				}
-				context.write(new Text(out), NullWritable.get());
+				if(sb.length()>0&&sb.charAt(sb.length()-1)==',')
+					sb.deleteCharAt(sb.length()-1);
+				sb.append(":");
+				if(score!=null&&score.length>=3){
+					sb.append(score[0]+","+score[1]+","+score[2]);
+				}
+				context.write(new Text(sb.toString()), NullWritable.get());
 			}
         }		
 	}
