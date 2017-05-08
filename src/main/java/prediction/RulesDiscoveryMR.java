@@ -185,15 +185,13 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 			long sid = 0;
 			Path[] cacheFiles = Job.getInstance(context.getConfiguration()).getLocalCacheFiles();
 			for(Path cache:cacheFiles){
-//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。
-				System.out.println("$$$$$$$$$$$");
-				System.out.println(cache.toString());
-				System.out.println(cache.getName());				
+//				通过输出信息，可以看到DistributedCache的缓存位置，文件名等信息。				
+//				System.out.println(cache.toString());
+//				System.out.println(cache.getName());				
 				BufferedReader br = new BufferedReader(new FileReader(cache.getName()));
 				String s = null;
 				while((s=br.readLine())!=null){
 					dictMap.put(s, sid++);
-					System.out.println(s+" "+(sid-1));
 				}
 				br.close();
 			}		
@@ -251,7 +249,6 @@ public class RulesDiscoveryMR extends Configured implements Tool{
 			String[] s = x.split(",");
 			Long sid = dictMap.get(s[1]);
 			Date date = sdf.parse(s[0]);
-			System.out.println(sid+" "+date.getTime());
 			if(sid!=null&&date!=null)
 				list.add(new TimeMeta(sid,date.getTime()));
 		}

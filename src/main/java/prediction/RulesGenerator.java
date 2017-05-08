@@ -136,8 +136,8 @@ public class RulesGenerator {
 			int n = 0;
 			//对每个firedSeq计算bit-save
 			for(n=0;n<firedSeq.size();n++){
-				int subConsequentBits = Huffman(freSeq.length-sp);
-				int smallestDistance = freSeq.length-sp;
+				int subConsequentBits = (freSeq.length-sp)*bit;//Huffman(freSeq.length-sp);
+				int smallestDistance = freSeq.length-sp;//计算后缀最小距离（匹配尽量多的meta）
 				//firedSeq[n]->X   --X是一个序列；   X起始时间戳 -    firedSeq[n]结束时间戳        <=ruleGap；X内任意相邻meta间隔<gap；
 				//                              logSeq[i].time-logSeq[firedSeq.get(n).end].time<=ruleGap
 				//枚举X每个可能的startPoint。
@@ -146,7 +146,7 @@ public class RulesGenerator {
 					int tmp = smallestDistance(i,freSeq,sp);
 					smallestDistance = tmp<smallestDistance?tmp:smallestDistance;
 				}
-				int subConsequentMDLbits = MDL(smallestDistance);
+				int subConsequentMDLbits = smallestDistance*bit;//MDL(smallestDistance);
 //2017-3-29：total-bit-save计算复杂度分析（已求得firedSeq的前提下）：
 //1.目标：要对每一个firedSeq都计算bit-save，最后得出total-bit-save。				
 //2.带break的代码原理：带break的前提是friedSeq按照firedSeq后缀与freSeq后缀距离由小到大排序，一旦subConsequentBits-subConsequentMDLbits==0则可以不再计算后边
@@ -156,9 +156,9 @@ public class RulesGenerator {
 //4.不排序时间复杂度：O(firedSeq.size()*T)。
 //	对每一个firedSeq，计算最优后缀T和bit-save O(1)，共计T，总计O(firedSeq.size()*T)。				
 //				if(subConsequentBits-subConsequentMDLbits<=0)break;
-				total += subConsequentBits-subConsequentMDLbits;
+				total += subConsequentBits-subConsequentMDLbits;//后缀最多匹配成功的位数=总长度-最小距离（最小没匹配上的位数）
 			}
-			total -= Huffman(freSeq.length-1-sp+1);
+			total -= (freSeq.length-1-sp+1)*bit;//Huffman(freSeq.length-1-sp+1);
 			result[sp] = total;
 		}	
 		return result;

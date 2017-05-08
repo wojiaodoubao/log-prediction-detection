@@ -66,7 +66,7 @@ public class Main {
 		DistributedRuleGeneratorArgs[3] = gap;
 		DistributedRuleGeneratorArgs[4] = gap;
 		DistributedRuleGeneratorArgs[5] = "4";
-		DistributedRuleGeneratorArgs[6] = "0.8";
+		DistributedRuleGeneratorArgs[6] = "0.0";
 		DistributedRuleGeneratorArgs[7] = LogToMetaArgs[1];
 		//RuleScoreToRules
 		String[] RuleScoreToRulesArgs = new String[2];
