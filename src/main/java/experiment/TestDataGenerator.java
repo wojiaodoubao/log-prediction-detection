@@ -10,6 +10,7 @@ public class TestDataGenerator {
 	public static void main(String args[]) throws IOException{
 		if(args!=null&&args.length>0){
 // /home/lijinglun/TimeSeries/experiment-30000000/input 10000000 1000 7000 10 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+			System.out.println(args[0]+" "+args[1]+" "+args[2]+" "+args[3]+" "+args[4]+" "+args[5]+" ");
 			String directory = args[0];
 			int num = Integer.parseInt(args[1]);
 			int logSum = Integer.parseInt(args[2]);
@@ -20,7 +21,7 @@ public class TestDataGenerator {
 			long miningGap = Long.parseLong(args[4]);
 			int maxLengthOfFrequentSequence = Integer.parseInt(args[5]);
 			List<String> logContent = new ArrayList<String>();
-			for(int i=5;i<args.length;i++){
+			for(int i=6;i<args.length;i++){
 				logContent.add(args[i]);
 			}
 			TestDataGenerator tdg = new TestDataGenerator(logNum,miningGap,adjacentGap,maxLengthOfFrequentSequence
@@ -62,6 +63,8 @@ public class TestDataGenerator {
 	}
 	public void generate(String directory) throws IOException{
 		SimpleDateFormat sdf = new SimpleDateFormat(this.dateFormatString);
+		long currentTime = new Date().getTime();
+		int sum = 0;
 		for(int i=0;i<logNum.length;i++){
 			//create log file
 			int recordNum = logNum[i];
@@ -77,7 +80,8 @@ public class TestDataGenerator {
 			//write log file
 			PrintWriter pw = new PrintWriter(logFile);
 			StringBuffer sb = new StringBuffer();
-			long curTime = new Date().getTime();
+//			long curTime = new Date().getTime();
+			long curTime = currentTime+i*(sum*overGap);
 			Random rd = new Random(curTime);
 			for(int j=0;j<recordNum;j++){
 				sb.setLength(0);//clear sb
@@ -91,6 +95,7 @@ public class TestDataGenerator {
 					curTime+=this.adjacentGap;
 			}
 			pw.close();
+			sum += logNum[i];
 		}
 	}
 }

@@ -24,7 +24,7 @@ public class MiningWithIndexAndSID {
 	public static void main(String args[]) throws NumberFormatException, IOException{
 //		String directory = StaticInfo.EXPERIMENT_ONE_DIRECTORY;
 //		String directory = "/home/belan/Desktop/MetaFileSplit";
-		String directory = "/home/belan/Desktop/正确输出数据2/MetaFileSplit";
+		String directory = "/home/belan/Desktop/Out/MetaFileSplit";//"/home/belan/Desktop/正确输出数据2/MetaFileSplit";
 		MiningWithIndexAndSID mi = new MiningWithIndexAndSID(directory,(long)6000,2);		
 		long time = System.currentTimeMillis();
 		Set<SeqWritable> res = mi.getFrequentSequence();
@@ -56,6 +56,7 @@ public class MiningWithIndexAndSID {
 					files[j].getName().matches("\\..*")){
 				continue;
 			}
+//			System.out.println("$$$$$$$$$$$$"+files[j].getName());
 			BufferedReader br = new BufferedReader(new FileReader(files[j]));
 			String line = null;
 			while((line=br.readLine())!=null){
@@ -71,14 +72,22 @@ public class MiningWithIndexAndSID {
 				for(int i=1;i<s.length-1;i+=2){//s[i]-logName s[i+1]-按','分隔的time
 					List<Index> timelist = new ArrayList<Index>();
 					for(String time:s[i+1].split(",")){
-						Date date = null;
-						try {
-							date = sdf.parse(time);
-						} catch (ParseException e) {
-							e.printStackTrace();
+//						Date date = null;
+//						try {
+//							date = sdf.parse(time);
+//						} catch (ParseException e) {
+//							e.printStackTrace();
+//						}
+//						if(date!=null){
+//							timelist.add(new Index(date.getTime(),date.getTime()));
+//						}
+						if(time.matches("^[0-9]*$")){
+							Long tmp = Long.parseLong(time);
+							timelist.add(new Index(tmp,tmp));
+							System.out.println(tmp);
 						}
-						if(date!=null){
-							timelist.add(new Index(date.getTime(),date.getTime()));
+						else{
+//							System.out.println(time);
 						}
 					}
 					indexMap.put(s[i], timelist);
